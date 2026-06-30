@@ -15,6 +15,30 @@ class IngestionError(OracleCopilotError):
     """Raised when PDF ingestion fails."""
 
 
+class ScannerError(IngestionError):
+    """Raised when directory scanning fails."""
+
+
+class PDFNotFoundError(IngestionError):
+    """Raised when a PDF file does not exist."""
+
+
+class EncryptedPDFError(IngestionError):
+    """Raised when a PDF is password-protected."""
+
+
+class CorruptedPDFError(IngestionError):
+    """Raised when a PDF file is corrupted or unparseable."""
+
+
+class EmptyPDFError(IngestionError):
+    """Raised when a PDF contains zero pages."""
+
+
+class InvalidPDFError(IngestionError):
+    """Raised when a file is not a valid PDF."""
+
+
 class PDFProcessingError(IngestionError):
     """Raised when a specific PDF cannot be processed."""
 
