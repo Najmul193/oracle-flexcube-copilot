@@ -1,0 +1,112 @@
+[project]
+name = "oracle-flexcube-copilot"
+version = "0.1.0"
+description = "RAG-based copilot for Oracle FLEXCUBE documentation using Qwen3:8B and ChromaDB"
+readme = "README.md"
+requires-python = ">=3.14"
+license = { text = "MIT" }
+authors = [
+    { name = "Najmul Alam", email = "rivan@example.com" },
+]
+
+dependencies = [
+    # PDF processing
+    "pypdf>=5.0.0",
+    "pdfplumber>=0.11.0",
+
+    # Vector store
+    "chromadb>=0.5.0",
+
+    # Embeddings & LLM (Ollama)
+    "ollama>=0.3.0",
+
+    # Sparse retrieval
+    "rank-bm25>=0.2.2",
+
+    # Config & logging
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-json-logger>=2.0.0",
+
+    # CLI
+    "click>=8.1.0",
+    "rich>=13.0.0",
+
+    # Utilities
+    "tqdm>=4.66.0",
+    "pyyaml>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.9.0",
+    "pre-commit>=3.7.0",
+]
+
+[project.scripts]
+oracle-copilot = "oracle_flexcube_copilot.cli:main"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "ARG", # flake8-unused-arguments
+    "RUF", # ruff-specific
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_any_unimported = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=src/oracle_flexcube_copilot --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["src/oracle_flexcube_copilot"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+]
+
+[build-system]
+requires = ["setuptools>=70.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
