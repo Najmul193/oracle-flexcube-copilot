@@ -16,12 +16,45 @@ from typing import Any, Generator
 import fitz
 
 from oracle_flexcube_copilot.exceptions import PDFProcessingError
-from oracle_flexcube_copilot.ingestion.models import Block, DocumentMetadata, Page, Paragraph
+from oracle_flexcube_copilot.ingestion.models import (
+    Block,
+    DocumentMetadata,
+    ImageInfo,
+    Page,
+    Paragraph,
+    TOCEntry,
+    TableData,
+    make_block_id,
+    make_page_id,
+)
 
 logger = logging.getLogger("oracle_flexcube_copilot.ingestion.parser")
 
 # Font sizes above this threshold (relative to the page's median) are considered headings
 HEADING_FONT_THRESHOLD = 1.2
+
+
+def parse_toc(doc: fitz.Document) -> list[TOCEntry]:
+    """Extract the table of contents from a PyMuPDF document.
+
+    Uses PyMuPDF's built-in ``doc.get_toc()`` which returns a list of
+    ``[level, title, page]`` entries.
+
+    Args:
+        doc: An opened PyMuPDF document.
+
+    Returns:
+        A list of ``TOCEntry`` instances, ordered by appearance.
+    """
+    raw_toc: list[list[Any]] = doc.get_toc()
+    toc: list[TOCEntry] = []
+    for entry in raw_toc:
+        if len(entry) >= 3:
+            level = int(entry[0])
+            title = str(entry[1])
+            page = int(entry[2])
+            toc.append(TOCEntry(level=level, title=title, page=page))
+    return toc
 
 
 def parse_document_metadata(doc: fitz.Document) -> DocumentMetadata:

@@ -25,8 +25,8 @@ from oracle_flexcube_copilot.ingestion.metadata import (
     get_last_modified,
     get_mime_type,
 )
-from oracle_flexcube_copilot.ingestion.models import Document
-from oracle_flexcube_copilot.ingestion.parser import parse_document_metadata, parse_pages
+from oracle_flexcube_copilot.ingestion.models import Document, make_block_id, make_page_id
+from oracle_flexcube_copilot.ingestion.parser import parse_document_metadata, parse_pages, parse_toc
 from oracle_flexcube_copilot.ingestion.scanner import scan_pdfs
 
 logger = logging.getLogger("oracle_flexcube_copilot.ingestion.service")
@@ -93,21 +93,35 @@ class DocumentIngestionService:
             path: The original file path (used for metadata).
 
         Returns:
-            A fully populated ``Document`` instance.
+            A fully populated ``Document`` instance with stable IDs.
         """
         resolved = path.resolve()
+        sha256 = compute_sha256(resolved)
         metadata = parse_document_metadata(doc)
-        pages = list(parse_pages(doc))
+        toc = parse_toc(doc)
+
+        # Parse pages and assign stable IDs
+        raw_pages = list(parse_pages(doc))
+        pages = []
+        for p in raw_pages:
+            blocks = []
+            for b in p.blocks:
+                block_id = make_block_id(sha256, p.page_number, b.block_index)
+                blocks.append(b.model_copy(update={"id": block_id}))
+            page_id = make_page_id(sha256, p.page_number)
+            pages.append(p.model_copy(update={"id": page_id, "blocks": blocks}))
 
         return Document(
+            id=sha256,
             filename=resolved.name,
             absolute_path=str(resolved),
-            sha256=compute_sha256(resolved),
+            sha256=sha256,
             file_size_bytes=get_file_size(resolved),
             last_modified=get_last_modified(resolved),
             created_time=get_creation_time(resolved),
             mime_type=get_mime_type(resolved),
             metadata=metadata,
+            table_of_contents=toc,
             pages=pages,
         )
 
