@@ -109,7 +109,7 @@ class EmbeddingEngine:
                 batch_latency = (time.time() - batch_start) / len(batch) if batch else 0.0
                 
                 for chunk, vector in zip(batch, vectors):
-                    self.cache.set(chunk.text, self.model_name, vector)
+                    self.cache.set(chunk.text, self.model_name, vector, chunk_id=chunk.id)
                     embedded_chunks.append(self._create_embedded_chunk(chunk, vector, batch_latency))
                     metrics.chunks_embedded += 1
                     
@@ -141,3 +141,14 @@ class EmbeddingEngine:
             embedding_time=latency,
             embedding_version=self.version,
         )
+
+    def embed(self, text: str) -> list[float]:
+        """Embed a single query string.
+        
+        Args:
+            text: The text to embed.
+            
+        Returns:
+            The embedding vector.
+        """
+        return self._embed_batch_with_retry([text])[0]

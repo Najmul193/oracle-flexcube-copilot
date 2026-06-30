@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 
 from oracle_flexcube_copilot.config import settings
@@ -53,21 +54,33 @@ class EmbeddingCache:
         if path.exists():
             try:
                 data = json.loads(path.read_text("utf-8"))
-                return data.get("embedding")
+                # Handle legacy format which was {"embedding": [...]}
+                if isinstance(data, dict):
+                    return data.get("embedding")
+                return None
             except Exception as e:
                 logger.warning("Failed to read cache at %s: %s", path, e)
         return None
 
-    def set(self, chunk_text: str, model_name: str, embedding: list[float]) -> None:
-        """Save an embedding to the cache.
+    def set(self, chunk_text: str, model_name: str, embedding: list[float], chunk_id: str = "") -> None:
+        """Save an embedding to the cache with rich metadata.
         
         Args:
             chunk_text: The text that was embedded.
             model_name: The model used.
             embedding: The embedding vector to save.
+            chunk_id: The ID of the chunk being embedded.
         """
         path = self._get_cache_path(chunk_text, model_name)
         try:
-            path.write_text(json.dumps({"embedding": embedding}), "utf-8")
+            data = {
+                "embedding_model": model_name,
+                "embedding_dimension": len(embedding),
+                "chunk_id": chunk_id,
+                "pipeline_version": settings.pipeline_version,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "embedding": embedding
+            }
+            path.write_text(json.dumps(data), "utf-8")
         except Exception as e:
             logger.warning("Failed to write cache at %s: %s", path, e)

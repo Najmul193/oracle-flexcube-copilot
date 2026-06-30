@@ -17,6 +17,8 @@ class ChunkMetadata(BaseModel):
     chunking_version: str = Field(description="Chunking strategy version")
     embedding_model: str = Field(default="", description="Target embedding model (populated later)")
     embedding_version: str = Field(default="", description="Embedding version (populated later)")
+    document_name: str | None = Field(default=None, description="Source document name")
+    module_classification: str | None = Field(default=None, description="Module classification")
 
 
 class Chunk(BaseModel):

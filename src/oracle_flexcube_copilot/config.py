@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Literal
-
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     log_format: Literal["json", "text"] = "text"
 
     # ChromaDB collection name
-    chroma_collection_name: str = "oracle_flexcube_docs"
+    chroma_collection_name: str = Field(default="oracle-flexcube-v1", description="Name of the ChromaDB collection")
 
     # Pipeline Versioning
     pipeline_version: str = "1.0.0"

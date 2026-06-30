@@ -46,6 +46,11 @@ class SemanticSectionChunker(Chunker):
         chunks: list[Chunk] = []
         chunk_counter = 0
 
+        # Stamp document name onto metadata
+        self.pipeline_meta = self.pipeline_meta.model_copy(update={
+            "document_name": document.filename
+        })
+
         # Create block lookup map
         block_map: dict[str, Block] = {}
         page_map: dict[str, int] = {}
@@ -209,7 +214,13 @@ class SemanticSectionChunker(Chunker):
         block_ids = {b.id for b in blocks}
         
         # Filter entities intersecting with this chunk
-        entities = [e for e in document.oracle_entities if e.section_id == section.id and e.page in pages]
+        # Match by section_id if available, otherwise by page range
+        page_set = set(pages)
+        entities = [
+            e for e in document.oracle_entities
+            if (e.section_id is not None and e.section_id == section.id)
+            or (e.section_id is None and e.page in page_set)
+        ]
         
         # Filter references matching block IDs
         references = [r for r in document.cross_references if r.source_block_id in block_ids]
