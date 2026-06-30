@@ -46,5 +46,11 @@ class Chunk(BaseModel):
     # Status
     embedding_status: str = Field(default="pending", description="Status of embedding (pending/completed)")
     
+    # Indexing & Retrieval
+    retrieval_score: float | None = Field(default=None, description="Similarity score during retrieval")
+    embedding: list[float] | None = Field(default=None, description="Vector representation")
+    embedding_model: str | None = Field(default=None, description="Model used for embedding")
+    indexed: bool = Field(default=False, description="Whether this chunk is in ChromaDB")
+    
     # Metadata
     metadata: ChunkMetadata | None = Field(default=None, description="Pipeline metadata")

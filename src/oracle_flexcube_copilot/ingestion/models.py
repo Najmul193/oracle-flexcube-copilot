@@ -16,10 +16,21 @@ across re-ingestion and incremental indexing.
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, ConfigDict
+
+
+class ProcessingStage(str, Enum):
+    """Pipeline processing stages for resumability."""
+    DISCOVERED = "discovered"
+    PARSED = "parsed"
+    ENRICHED = "enriched"
+    CHUNKED = "chunked"
+    EMBEDDED = "embedded"
+    INDEXED = "indexed"
 
 
 def make_block_id(doc_sha256: str, page_number: int, block_index: int) -> str:
@@ -118,6 +129,7 @@ class DocumentMetadata(BaseModel):
     creation_date: datetime | None = Field(default=None, description="Document creation timestamp")
     modification_date: datetime | None = Field(default=None, description="Last modification timestamp")
     page_count: int = Field(default=0, description="Total number of pages in the document")
+    processing_stage: ProcessingStage = Field(default=ProcessingStage.DISCOVERED, description="Current stage in pipeline")
 
 
 class TOCEntry(BaseModel):
