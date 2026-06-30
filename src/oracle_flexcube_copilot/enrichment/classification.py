@@ -110,10 +110,14 @@ def extract_oracle_entities(document: Document, block_to_section: dict[str, str]
                     for match in pattern.finditer(text):
                         entity_name = match.group(1)
                         # Filter out common false positives (purely numeric, too short)
-                        if len(entity_name) >= 4 and any(c.isalpha() for c in entity_name) and "_" in entity_name:
-                            key = f"{entity_name}:{page.page_number}"
-                            if key not in seen:
-                                seen.add(key)
+                        if len(entity_name) >= 4 and any(c.isalpha() for c in entity_name):
+                            # Accept if it has an underscore (e.g. STTM_PRODUCT) 
+                            # OR if it's 6-8 characters of purely uppercase letters/numbers (e.g. STDCIF)
+                            is_valid = "_" in entity_name or (6 <= len(entity_name) <= 8 and entity_name.isupper())
+                            if is_valid:
+                                key = f"{entity_name}:{page.page_number}"
+                                if key not in seen:
+                                    seen.add(key)
                                 entities.append(
                                     OracleEntity(
                                         name=entity_name,
