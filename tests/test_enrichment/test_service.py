@@ -64,6 +64,26 @@ class TestDocumentEnrichmentService:
         for eb in enriched.enriched_blocks:
             assert isinstance(eb.heading_path, list)
 
+    def test_enriched_retains_pages(self, sample_document: Document) -> None:
+        """Enriched document should retain raw pages."""
+        service = DocumentEnrichmentService()
+        enriched = service.enrich(sample_document)
+        assert len(enriched.pages) == len(sample_document.pages)
+
+    def test_entity_extraction_works(self, sample_document: Document) -> None:
+        """Enriched document should have oracle_entities extracted."""
+        # sample_document has "STTM_PRODUCT" in it (from conftest.py)
+        service = DocumentEnrichmentService()
+        enriched = service.enrich(sample_document)
+        assert len(enriched.oracle_entities) >= 1
+        assert any(e.name == "STTM_PRODUCT" for e in enriched.oracle_entities)
+
+    def test_classification_works(self, sample_document: Document) -> None:
+        """Document should be classified."""
+        service = DocumentEnrichmentService()
+        enriched = service.enrich(sample_document)
+        assert isinstance(enriched.module_classification, str)
+
     def test_implements_protocol(self, sample_document: Document) -> None:
         """DocumentEnrichmentService should satisfy the DocumentEnricher protocol."""
         service = DocumentEnrichmentService()

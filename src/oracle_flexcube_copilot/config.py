@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 2048
 
     # Chunking
-    chunk_size: int = 512
-    chunk_overlap: int = 128
+    chunk_size: int = 800
+    chunk_overlap: int = 100
 
     # Retrieval
     top_k_retrieval: int = 5
@@ -45,6 +45,11 @@ class Settings(BaseSettings):
 
     # ChromaDB collection name
     chroma_collection_name: str = "oracle_flexcube_docs"
+
+    # Pipeline Versioning
+    pipeline_version: str = "1.0.0"
+    chunking_version: str = "1.0.0"
+    embedding_version: str = "v1"
 
     @property
     def resolved_data_dir(self) -> Path:

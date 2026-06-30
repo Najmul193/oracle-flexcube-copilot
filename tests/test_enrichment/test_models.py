@@ -6,6 +6,7 @@ from oracle_flexcube_copilot.enrichment.models import (
     EnrichedBlock,
     EnrichedDocument,
     HeadingNode,
+    OracleEntity,
     Reference,
     Section,
     TableData,
@@ -37,13 +38,31 @@ class TestEnrichedDocument:
         assert doc.sections == []
         assert doc.enriched_blocks == []
         assert doc.cross_references == []
+        assert doc.oracle_entities == []
         assert doc.tables == []
+        assert doc.pages == []
+
+    def test_module_classification_default(self) -> None:
+        """Module classification should default to Unknown."""
+        doc = EnrichedDocument(document_id="x", filename="x.pdf")
+        assert doc.module_classification == "Unknown"
 
     def test_ingestion_timestamp_is_iso_string(self) -> None:
         """ingestion_timestamp should be a valid ISO 8601 string."""
         doc = EnrichedDocument(document_id="x", filename="x.pdf")
         assert isinstance(doc.ingestion_timestamp, str)
         assert "T" in doc.ingestion_timestamp  # ISO 8601 has T separator
+
+
+class TestOracleEntity:
+    """Tests for :class:`OracleEntity`."""
+
+    def test_defaults(self) -> None:
+        """OracleEntity should have correct defaults."""
+        entity = OracleEntity(name="CASA", entity_type="MODULE")
+        assert entity.page == 0
+        assert entity.section_id is None
+        assert entity.context == ""
 
 
 class TestSection:

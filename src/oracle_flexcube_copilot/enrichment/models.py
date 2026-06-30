@@ -7,6 +7,7 @@ Represents the hierarchy:
         ├── Heading Tree (nested)
         ├── Sections (flat list with parent/child refs)
         ├── Cross-references
+        ├── Oracle Entities
         ├── Tables
         └── EnrichedBlocks (blocks with section context)
 """
@@ -18,7 +19,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ConfigDict
 
-from oracle_flexcube_copilot.ingestion.models import TOCEntry
+from oracle_flexcube_copilot.ingestion.models import TOCEntry, Page
 
 
 class HeadingNode(BaseModel):
@@ -80,6 +81,16 @@ class TableData(BaseModel):
     num_cols: int = Field(default=0, description="Number of columns")
 
 
+class OracleEntity(BaseModel):
+    """An Oracle-specific entity (e.g. STTM_PRODUCT, CASA, EOD) extracted from text."""
+
+    name: str = Field(description="The entity name/identifier")
+    entity_type: str = Field(description="Type of entity (e.g. SCREEN, MODULE, PROCESS)")
+    page: int = Field(default=0, description="Page number where found")
+    section_id: str | None = Field(default=None, description="Section ID where found")
+    context: str = Field(default="", description="Surrounding text for context")
+
+
 class EnrichedDocument(BaseModel):
     """A fully enriched document ready for chunking and retrieval."""
 
@@ -97,7 +108,11 @@ class EnrichedDocument(BaseModel):
     # Enriched data
     enriched_blocks: list[EnrichedBlock] = Field(default_factory=list, description="Blocks with section context")
     cross_references: list[Reference] = Field(default_factory=list, description="All cross-references found")
+    oracle_entities: list[OracleEntity] = Field(default_factory=list, description="Extracted Oracle-specific entities")
     tables: list[TableData] = Field(default_factory=list, description="All tables found")
+    pages: list[Page] = Field(default_factory=list, description="Original pages containing raw text blocks")
+
+    module_classification: str = Field(default="Unknown", description="High-level module classification (e.g. CASA, Treasury)")
 
     ingestion_timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 

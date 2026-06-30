@@ -20,6 +20,10 @@ from oracle_flexcube_copilot.enrichment.models import (
     Section,
     TableData,
 )
+from oracle_flexcube_copilot.enrichment.classification import (
+    classify_document,
+    extract_oracle_entities,
+)
 from oracle_flexcube_copilot.enrichment.references import extract_references
 from oracle_flexcube_copilot.enrichment.tables import extract_tables
 from oracle_flexcube_copilot.enrichment.toc import extract_toc
@@ -75,6 +79,11 @@ class DocumentEnrichmentService:
         # Step 6: Build enriched blocks with section context
         enriched_blocks = self._build_enriched_blocks(document, sections, heading_tree)
 
+        # Step 7: Classification and Entity Extraction
+        block_to_section = {b.id: b.section_id for b in enriched_blocks if b.section_id}
+        module_classification = classify_document(document)
+        oracle_entities = extract_oracle_entities(document, block_to_section)
+
         enriched = EnrichedDocument(
             document_id=document.id,
             filename=document.filename,
@@ -86,7 +95,10 @@ class DocumentEnrichmentService:
             sections=sections,
             enriched_blocks=enriched_blocks,
             cross_references=references,
+            oracle_entities=oracle_entities,
             tables=tables,
+            pages=document.pages,
+            module_classification=module_classification,
         )
 
         elapsed = time.time() - start
