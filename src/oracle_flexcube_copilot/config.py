@@ -30,7 +30,11 @@ class Settings(BaseSettings):
     embedding_model: str = "nomic-embed-text"
     llm_model: str = "qwen3:8b"
     llm_temperature: float = 0.1
+    llm_top_p: float = 0.9
+    llm_repeat_penalty: float = 1.1
+    llm_num_ctx: int = 8192
     llm_max_tokens: int = 2048
+    llm_timeout: int = 120
 
     # Chunking
     chunk_size: int = 800

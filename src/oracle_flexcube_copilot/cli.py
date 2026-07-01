@@ -1,5 +1,6 @@
 """Command-line interface for Oracle FLEXCUBE Copilot."""
 
+import time
 from pathlib import Path
 
 import click
@@ -19,10 +20,9 @@ from oracle_flexcube_copilot.evaluation.report import generate_markdown_report
 from oracle_flexcube_copilot.indexing.entity_index import OracleEntityIndex
 from oracle_flexcube_copilot.indexing.indexer import ChromaIndexer
 from oracle_flexcube_copilot.ingestion.service import DocumentIngestionService
-from oracle_flexcube_copilot.llm.engine import LLMEngine
+from oracle_flexcube_copilot.llm import ConsoleAnswerFormatter, LLMConfig, RAGAnswerGenerator, StreamHandler
 from oracle_flexcube_copilot.prompting.builder import RAGPromptBuilder
 from oracle_flexcube_copilot.prompting.models import ContextConfig
-from oracle_flexcube_copilot.prompts.builder import PromptBuilder
 from oracle_flexcube_copilot.retrieval.bm25 import BM25Indexer, BM25Retriever
 from oracle_flexcube_copilot.retrieval.engine import VectorRetriever
 from oracle_flexcube_copilot.retrieval.fusion import RRFFuser
@@ -72,12 +72,24 @@ def search(query: str, top_k: int) -> None:
 @main.command()
 @click.argument("query")
 @click.option("--top-k", default=5, help="Number of context chunks to retrieve.")
+@click.option(
+    "--mode",
+    default="concise",
+    type=click.Choice(["concise", "detailed", "expert"], case_sensitive=False),
+    help="Answer mode: concise (default), detailed, or expert.",
+)
 @click.option("--stream/--no-stream", default=True, help="Stream tokens as they are generated.")
-def ask(query: str, top_k: int, stream: bool) -> None:
-    """Ask a question — retrieves context from PDFs and answers using Qwen."""
-    console.print(f"[bold blue]Question:[/bold blue] {query}\n")
+@click.option("--min-score", default=None, type=float, help="Minimum relevance score threshold.")
+def ask(query: str, top_k: int, mode: str, stream: bool, min_score: float | None) -> None:
+    """Ask a question — retrieves context from PDFs and answers using Qwen3.
 
-    # Initialize pipeline
+    Three answer modes:
+    \b
+      concise  2-5 sentence answer with citations (default)
+      detailed  Full explanation with steps and Oracle terminology
+      expert   Technical details, screen names, field descriptions, cross-references
+    """
+    # Initialize retrieval pipeline
     indexer = ChromaIndexer()
     cache = EmbeddingCache(cache_dir=settings.resolved_cache_dir)
     embedder = EmbeddingEngine(cache=cache)
@@ -85,37 +97,67 @@ def ask(query: str, top_k: int, stream: bool) -> None:
     bm25_retriever = BM25Retriever()
     fuser = RRFFuser()
 
-    prompt_builder = PromptBuilder()
-    llm = LLMEngine()
+    # Initialize LLM pipeline
+    llm_config = LLMConfig(
+        base_url=settings.ollama_base_url,
+        model=settings.llm_model,
+        temperature=settings.llm_temperature,
+        top_p=settings.llm_top_p,
+        repeat_penalty=settings.llm_repeat_penalty,
+        num_ctx=settings.llm_num_ctx,
+        num_predict=settings.llm_max_tokens,
+        timeout=settings.llm_timeout,
+    )
+    generator = RAGAnswerGenerator()
+    builder = RAGPromptBuilder()
+    formatter = ConsoleAnswerFormatter()
 
     # 1. Retrieve context
+    t_retrieval_start = time.perf_counter()
     with console.status("[bold yellow]Searching documentation...[/bold yellow]"):
         vector_results = vector_retriever.retrieve(query, top_k=top_k)
         bm25_results = bm25_retriever.retrieve(query, top_k=top_k)
         results = fuser.fuse([vector_results, bm25_results], top_k=top_k)
+    t_retrieval_end = time.perf_counter()
+    retrieval_time = t_retrieval_end - t_retrieval_start
 
     if not results:
         console.print("[yellow]No relevant documentation found. Cannot answer.[/yellow]")
         return
 
-    # 2. Show sources briefly
-    console.print(f"[dim]Found {len(results)} source(s):[/dim]")
-    for i, res in enumerate(results, 1):
-        console.print(f"  [dim]{i}. {res.source_document} — Page {res.page}[/dim]")
-    console.print()
+    # 2. Build structured prompt
+    config = ContextConfig(
+        max_tokens=settings.prompt_max_tokens,
+        min_score=min_score if min_score is not None else settings.prompt_min_score,
+    )
+    prompt_request = builder.build(query, results, config=config)
 
-    # 3. Build structured prompt
-    prompt = prompt_builder.build_rag_prompt(query, results)
-
-    # 4. Generate or stream answer
-    console.print("[bold green]Answer:[/bold green]")
+    # 3. Generate or stream answer
     if stream:
-        for token in llm.stream(prompt):
+        console.print(formatter.format_stream_start(query, mode))
+        stream_handler = StreamHandler()
+        token_stream = generator.stream(prompt_request, mode=mode)
+        for token in stream_handler.handle(token_stream):
             console.print(token, end="", markup=False)
-        console.print()  # final newline
+        console.print()
+
+        # Build minimal response for footer
+        answer_response = generator.generate(prompt_request, mode=mode)
+        answer_response.answer = stream_handler.text
+        answer_response.metadata.generation_time = 0.0  # streaming time not tracked
+        answer_response.metadata.completion_tokens = stream_handler.token_count
+        answer_response.metadata.total_tokens = (
+            prompt_request.estimated_tokens + stream_handler.token_count
+        )
+        answer_response.metadata.retrieval_time = retrieval_time
+
+        footer = formatter.format_stream_end(answer_response)
+        console.print(footer)
     else:
-        answer = llm.generate(prompt)
-        console.print(answer)
+        answer_response = generator.generate(prompt_request, mode=mode)
+        answer_response.metadata.retrieval_time = retrieval_time
+        output = formatter.format(answer_response, query)
+        console.print(output)
 
 
 @main.command()
