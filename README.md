@@ -1,6 +1,26 @@
 # Oracle FLEXCUBE Copilot
 
-RAG-powered assistant for Oracle FLEXCUBE documentation. Uses hybrid retrieval (vector + BM25 + entity + RRF) over 179 Oracle PDFs to answer questions via Qwen3:8B (Ollama).
+RAG-powered assistant for Oracle FLEXCUBE documentation. Uses hybrid retrieval (vector + BM25 + RRF) over 179 Oracle PDFs to answer questions via Qwen3:8B (Ollama).
+
+![UI Screenshot](docs/ui-screenshot.png)
+
+---
+
+## Benchmark Results
+
+Evaluated against 95 questions spanning GL, CASA, Loans, Islamic Banking, Security, CommonCore, Charges, Interest, Products, Term Deposits, and Tax modules.
+
+| Retrieval Mode | Hit@5 | MRR | NDCG@10 |
+|---------------|-------|-----|---------|
+| Dense only    | —     | —   | —       |
+| BM25 only     | —     | —   | —       |
+| Hybrid (RRF)  | 9.47% | 0.0996 | 0.1225 |
+
+**Latency:** 29.7 ms avg embedding · 44.0 ms avg retrieval
+
+> Hybrid RRF still underperforms on document-level benchmarks because the dataset uses document-level relevance while retrieval operates at chunk granularity. Next steps: per-chunk relevance labelling, tuned retrieval alpha, entity retriever integration.
+
+---
 
 ## Architecture
 
@@ -18,80 +38,90 @@ Oracle PDFs (179)
   └──────────────────────────────────────────┘
        │
        ▼
-  ┌─────────────────────────────────────────────┐
-  │  Index Layer                                │
-  │  ┌──────────┐  ┌──────────┐  ┌───────────┐ │
-  │  │ ChromaDB │  │   BM25   │  │  Entity   │ │
-  │  │ (dense)  │  │ (sparse) │  │  (SQLite) │ │
-  │  └──────────┘  └──────────┘  └───────────┘ │
-  └─────────────────────────────────────────────┘
-       │              │              │
-       └──────────────┴──────────────┘
-                      │
-                      ▼
-           RRF Fusion (k=60)
-                      │
-                      ▼
-             ┌────────────────┐
-             │  Prompt Builder │
-             │  (XML context)  │
-             └────────────────┘
-                      │
-                      ▼
-             ┌────────────────┐
-             │  Qwen3:8B      │
-             │  (Ollama)      │
-             └────────────────┘
-                      │
-                      ▼
-             Answer + Citations + Confidence
+  ┌────────────────────────────────────────┐
+  │  Index Layer                           │
+  │  ┌──────────┐  ┌──────────┐            │
+  │  │ ChromaDB │  │   BM25   │            │
+  │  │ (dense)  │  │ (sparse) │            │
+  │  └──────────┘  └──────────┘            │
+  └────────────────────────────────────────┘
+       │              │
+       └──────────────┘
+              │
+              ▼
+     RRF Fusion (k=60)
+              │
+              ▼
+     ┌────────────────┐
+     │  Prompt Builder │
+     │  (XML context)  │
+     └────────────────┘
+              │
+              ▼
+     ┌────────────────┐
+     │  Qwen3:8B      │
+     │  (Ollama)      │
+     └────────────────┘
+              │
+              ▼
+     Answer + Citations + Confidence
 ```
+
+---
 
 ## Prerequisites
 
-- **Python 3.14+**
+- **Python 3.11+** (project targets 3.14 for pattern matching and `list[...]` type syntax — runs fine on 3.11+)
 - **Ollama** with `qwen3:8b` and `nomic-embed-text`
-- ~8 GB RAM (for LLM + vector store)
+- ~8 GB RAM
+
+---
 
 ## Quick Start
 
-```bash
-# Create and activate virtual environment
-python3 -m venv .venv && source .venv/bin/activate
+### One-click launcher
 
-# Install
+```bash
+./start-ui.sh
+```
+
+Checks Ollama, pulls missing models, creates venv, installs deps, launches UI at `http://localhost:8501`.
+
+### Manual
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
-# Ingest PDFs (from docs/)
+# Index PDFs (one-time)
 oracle-copilot ingest docs/
 
-# Ask a question (CLI)
+# Ask a question
 oracle-copilot ask "How do I configure CASA interest rates?"
 
-# Or launch the UI
-oracle-copilot-ui     # --or--
-make ui               # --or--
-streamlit run src/oracle_flexcube_copilot/ui/app.py
+# Launch UI
+make ui
 ```
+
+---
 
 ## CLI Reference
 
-### `ask` — Question answering
+| Command | Description |
+|---------|-------------|
+| `ask` | Answer a question using RAG |
+| `ingest` | Index PDF documents |
+| `search` | Retrieve chunks without LLM |
+| `prompt` | Inspect the assembled prompt |
+| `benchmark` | Run evaluation metrics |
+| `stats` | System health check |
+
+### `ask` — modes
 
 ```bash
-oracle-copilot ask "How do I maintain GL Balance Transfer?"
-
-# Answer modes
 oracle-copilot ask "question" --mode concise      # 2-5 sentences (default)
 oracle-copilot ask "question" --mode detailed      # Full step-by-step
 oracle-copilot ask "question" --mode expert        # Technical + cross-refs
-
-# Streaming
-oracle-copilot ask "question" --stream             # Token streaming (default)
-oracle-copilot ask "question" --no-stream          # Wait for full answer
-
-# Confidence filter
-oracle-copilot ask "question" --min-score 0.5      # Minimum relevance threshold
 ```
 
 | Mode | Description |
@@ -100,64 +130,30 @@ oracle-copilot ask "question" --min-score 0.5      # Minimum relevance threshold
 | `detailed` | Step-by-step instructions with navigation |
 | `expert` | Technical deep-dive with cross-references |
 
-### `ingest` — Index documents
-
-```bash
-oracle-copilot ingest path/to/pdf/directory/
-```
-
-Runs: PDF extraction → enrichment (headings, entities, tables) → semantic chunking → embedding → ChromaDB + BM25 index build.
-
-### `prompt` — Inspect the assembled prompt
-
-```bash
-oracle-copilot prompt "How do I configure CASA?" --show-context --show-system
-```
-
-Builds and displays the full prompt sent to the LLM — useful for debugging (no LLM call).
-
-### `search` — Pure retrieval
-
-```bash
-oracle-copilot search "interest rate configuration" --top-k 10
-```
-
-Returns raw fused results without LLM generation.
-
-### `benchmark` — Evaluation
-
-```bash
-oracle-copilot benchmark benchmark_dataset.yaml --top-k 10
-```
-
-Measures Hit@k, Recall@k, MRR, NDCG@k.
-
-### `stats` — System health
-
-```bash
-oracle-copilot stats
-```
+---
 
 ## User Interface
 
-A Streamlit web UI provides the same features with a chat interface:
-
 ```bash
-make ui
-# opens at http://localhost:8501
+make ui      # opens at http://localhost:8501
 ```
 
-**Features:**
-- Chat interface with message history
-- Streaming token display
-- Mode selector (concise / detailed / expert)
-- Top-K slider, Min Score filter
+**Chat features:**
+- Streaming token display with live speed (tok/s)
+- Mode selector, Top-K slider, Min Score filter
 - Per-answer Sources & Metrics expander (citations, confidence, timing, tokens)
-- "Clear Chat" button
+
+**Debug Console** (sidebar expander — not in main UI):
+- **⟳ Ollama PS** — refreshable `ollama ps` output (PID, model, uptime, VRAM)
+- **Live speed gauge** — real-time tokens/sec and token count during generation
+- **Raw prompt preview** — first 2000 chars of the XML prompt sent to the LLM
+- **Retrieval breakdown** — which chunks matched, scores, retrieval methods
+
+---
 
 ## Configuration
 
-All settings via environment variables or `.env` file:
+Environment variables or `.env` file:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -179,6 +175,31 @@ All settings via environment variables or `.env` file:
 | `LOG_LEVEL` | `INFO` | Logging level |
 | `LOG_FORMAT` | `text` | `text` or `json` |
 
+---
+
+## Project Structure
+
+```
+src/oracle_flexcube_copilot/
+├── cli.py                 # Click CLI
+├── config.py              # Pydantic settings
+├── chunking/              # Semantic section chunking
+├── embedding/             # nomic-embed-text + disk cache
+├── enrichment/            # Headings, entities, tables, hierarchy
+├── evaluation/            # Benchmark, metrics, reporting
+├── indexing/              # ChromaDB, BM25, entity index
+├── ingestion/             # PDF parsing, metadata
+├── llm/                   # Ollama client, generator, streaming
+├── prompting/             # XML prompt builder, system templates
+├── retrieval/             # Vector, BM25, RRF fusion
+└── ui/                    # Streamlit chat interface
+
+tests/                     # 45 files across 11 test packages
+docs/                      # 179 Oracle PDFs (~1.2 GB)
+```
+
+---
+
 ## Development
 
 ```bash
@@ -186,39 +207,16 @@ make install       # Install dependencies
 make lint          # Ruff check + format
 make typecheck     # mypy
 make test          # pytest + coverage
-make test-cov      # pytest with coverage report
 make clean         # Remove artifacts
 ```
 
-### Project structure
-
-```
-src/oracle_flexcube_copilot/
-├── __init__.py
-├── cli.py                 # CLI entry point (click)
-├── config.py              # Pydantic settings
-├── exceptions.py          # Shared exceptions
-├── logger.py              # Logging config
-├── chunking/              # Semantic section chunking
-├── embedding/             # nomic-embed-text via Ollama + caching
-├── enrichment/            # Headings, entities, tables, hierarchy extraction
-├── evaluation/            # Benchmark runner, metrics, reporting
-├── indexing/              # ChromaDB vector store, BM25, entity index
-├── ingestion/             # PDF parsing, metadata, loading
-├── llm/                   # Ollama client, RAG generator, formatter, streaming
-├── prompting/             # Prompt builder, XML context, system templates
-├── prompts/               # Alternative prompt strategies (legacy)
-├── retrieval/             # Vector, BM25, entity retrievers, RRF fusion
-└── ui/                    # Streamlit chat interface
-```
-
-### Adding evaluation
+### Evaluation
 
 ```bash
-oracle-copilot benchmark my_dataset.yaml --top-k 15
+oracle-copilot benchmark benchmark_dataset.yaml --top-k 10
 ```
 
-Dataset format (YAML):
+Dataset format:
 
 ```yaml
 queries:
@@ -226,6 +224,18 @@ queries:
     relevant_docs: ["CASA.pdf", "Interest.pdf"]
     module: "CASA"
 ```
+
+---
+
+## GitHub Topics
+
+When searching the repo, add these topics:
+
+```
+rag, llm, oracle-flexcube, python, information-retrieval, streamlit, ollama, chromadb, qwen, hybrid-search
+```
+
+---
 
 ## License
 

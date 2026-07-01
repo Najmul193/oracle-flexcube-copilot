@@ -3,7 +3,7 @@ name = "oracle-flexcube-copilot"
 version = "0.1.0"
 description = "RAG-based copilot for Oracle FLEXCUBE documentation using Qwen3:8B and ChromaDB"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
     { name = "Najmul Alam", email = "rivan@example.com" },
@@ -55,7 +55,7 @@ oracle-copilot = "oracle_flexcube_copilot.cli:main"
 oracle-copilot-ui = "oracle_flexcube_copilot.ui.app:main"
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
