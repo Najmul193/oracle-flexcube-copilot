@@ -16,10 +16,7 @@ def load_dataset(path: str | Path) -> list[EvalQuery]:
 
     text = path.read_text("utf-8")
 
-    if path.suffix in (".yaml", ".yml"):
-        data = yaml.safe_load(text)
-    else:
-        data = json.loads(text)
+    data = yaml.safe_load(text) if path.suffix in (".yaml", ".yml") else json.loads(text)
 
     if not isinstance(data, list):
         raise ValueError("Dataset must be a list of queries")

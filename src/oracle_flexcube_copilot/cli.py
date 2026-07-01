@@ -213,8 +213,12 @@ def prompt(
 
 @main.command()
 @click.argument("dataset_path", type=click.Path(exists=True))
-def benchmark(dataset_path: str) -> None:
-    """Run the evaluation framework against a dataset."""
+@click.option("--top-k", default=10, type=int, help="Evaluation depth (default 10).")
+def benchmark(dataset_path: str, top_k: int) -> None:
+    """Run the evaluation framework against a dataset.
+
+    Measures the full hybrid pipeline: Vector + BM25 + Entity Index + RRF.
+    """
     console.print(f"[bold blue]Running benchmark using dataset:[/bold blue] {dataset_path}")
 
     try:
@@ -229,7 +233,7 @@ def benchmark(dataset_path: str) -> None:
     evaluator = RetrievalEvaluator(embedder=embedder, indexer=indexer)
 
     with console.status("[bold green]Evaluating queries...[/bold green]"):
-        metrics = evaluator.evaluate(queries)
+        metrics = evaluator.evaluate(queries, top_k=top_k)
 
     report = generate_markdown_report(metrics)
     console.print(report)

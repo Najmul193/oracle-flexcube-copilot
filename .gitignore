@@ -23,6 +23,7 @@ venv/
 
 # Project-specific
 chroma_db/
+entity_db/
 cache/
 logs/
 data/
