@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any
 
 from oracle_flexcube_copilot.enrichment.models import OracleEntity
 from oracle_flexcube_copilot.ingestion.models import Document
@@ -48,7 +47,7 @@ def classify_document(document: Document) -> str:
         The classification string (e.g., 'CASA', 'Loans', 'Unknown').
     """
     search_text = f"{document.filename} {document.metadata.title or ''}".lower()
-    
+
     # Also grab the first few pages of text to help with classification
     content_sample = ""
     for page in document.pages[:3]:
@@ -70,7 +69,9 @@ def classify_document(document: Document) -> str:
     return best_match
 
 
-def extract_oracle_entities(document: Document, block_to_section: dict[str, str]) -> list[OracleEntity]:
+def extract_oracle_entities(
+    document: Document, block_to_section: dict[str, str]
+) -> list[OracleEntity]:
     """Extract Oracle-specific entities from the document text.
 
     Args:
@@ -88,7 +89,7 @@ def extract_oracle_entities(document: Document, block_to_section: dict[str, str]
             section_id = block_to_section.get(block.id)
             for para in block.paragraphs:
                 text = para.text
-                
+
                 # Check for specific entities
                 for entity_name, entity_type in SPECIFIC_ENTITIES.items():
                     if re.search(rf"\b{entity_name}\b", text):
@@ -111,9 +112,11 @@ def extract_oracle_entities(document: Document, block_to_section: dict[str, str]
                         entity_name = match.group(1)
                         # Filter out common false positives (purely numeric, too short)
                         if len(entity_name) >= 4 and any(c.isalpha() for c in entity_name):
-                            # Accept if it has an underscore (e.g. STTM_PRODUCT) 
+                            # Accept if it has an underscore (e.g. STTM_PRODUCT)
                             # OR if it's 6-8 characters of purely uppercase letters/numbers (e.g. STDCIF)
-                            is_valid = "_" in entity_name or (6 <= len(entity_name) <= 8 and entity_name.isupper())
+                            is_valid = "_" in entity_name or (
+                                6 <= len(entity_name) <= 8 and entity_name.isupper()
+                            )
                             if is_valid:
                                 key = f"{entity_name}:{page.page_number}"
                                 if key not in seen:

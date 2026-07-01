@@ -17,11 +17,11 @@ class PromptBuilder:
 
     def build_rag_prompt(self, question: str, context: list[SearchResult]) -> str:
         """Construct the full RAG prompt using the retrieved context."""
-        
+
         prompt_parts = [self.SYSTEM_PROMPT]
-        
+
         prompt_parts.append("\n----------------\nRetrieved Context\n----------------")
-        
+
         if not context:
             prompt_parts.append("No context retrieved.")
         else:
@@ -31,8 +31,8 @@ class PromptBuilder:
                 prompt_parts.append(f"Page: {result.page}")
                 prompt_parts.append(f"Section: {result.heading}")
                 prompt_parts.append(f"Text:\n{result.text.strip()}")
-                
+
         prompt_parts.append("\n----------------\nUser Question\n----------------")
         prompt_parts.append(question.strip())
-        
+
         return "\n".join(prompt_parts)

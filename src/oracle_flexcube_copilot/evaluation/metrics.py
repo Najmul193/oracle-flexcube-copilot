@@ -8,18 +8,18 @@ def is_match(result: SearchResult, query: EvalQuery) -> bool:
     """Determine if a search result matches the expected ground truth."""
     if query.expected_document and query.expected_document != result.source_document:
         return False
-        
+
     if query.expected_section:
         # A simple check: either the exact section name, or it's part of the heading path
         if query.expected_section.lower() not in result.heading.lower():
             return False
-            
+
     if query.expected_keywords:
         text_lower = result.text.lower()
         for kw in query.expected_keywords:
             if kw.lower() not in text_lower:
                 return False
-                
+
     return True
 
 

@@ -23,7 +23,10 @@ def valid_pdf_path(tmp_data_dir: Path) -> Path:
     doc = fitz.open()
     pages_content = [
         ("Title Page", "# Document Title\n\nThis is the first paragraph."),
-        ("Chapter 1", "## Introduction\n\nThis is the introduction paragraph.\n\nMore details here."),
+        (
+            "Chapter 1",
+            "## Introduction\n\nThis is the introduction paragraph.\n\nMore details here.",
+        ),
         ("Chapter 2", "## Configuration\n\nStep 1: Do this.\nStep 2: Do that."),
     ]
     for title, content in pages_content:
@@ -53,7 +56,9 @@ def encrypted_pdf_path(tmp_data_dir: Path) -> Path:
     path = tmp_data_dir / "encrypted.pdf"
     doc = fitz.open()
     doc.new_page()
-    doc.save(str(path), encryption=fitz.PDF_ENCRYPT_AES_256, owner_pw="password", user_pw="password")
+    doc.save(
+        str(path), encryption=fitz.PDF_ENCRYPT_AES_256, owner_pw="password", user_pw="password"
+    )
     doc.close()
     return path
 

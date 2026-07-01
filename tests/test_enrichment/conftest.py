@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -33,36 +33,88 @@ def sample_document() -> Document:
             id=f"{sha256}:p1",
             page_number=1,
             blocks=[
-                Block(id=f"{sha256}:p1:b0", type="heading", level=1, block_index=0, paragraphs=[Paragraph(text="Chapter 1: Product Definition", index=0)]),
-                Block(id=f"{sha256}:p1:b1", type="heading", level=2, block_index=1, paragraphs=[Paragraph(text="1.1 Product Code", index=0)]),
-                Block(id=f"{sha256}:p1:b2", type="text", block_index=2, paragraphs=[
-                    Paragraph(text="The product code identifies the financial product.", index=0),
-                    Paragraph(text="Refer to STTM_PRODUCT for details.", index=1),
-                ]),
+                Block(
+                    id=f"{sha256}:p1:b0",
+                    type="heading",
+                    level=1,
+                    block_index=0,
+                    paragraphs=[Paragraph(text="Chapter 1: Product Definition", index=0)],
+                ),
+                Block(
+                    id=f"{sha256}:p1:b1",
+                    type="heading",
+                    level=2,
+                    block_index=1,
+                    paragraphs=[Paragraph(text="1.1 Product Code", index=0)],
+                ),
+                Block(
+                    id=f"{sha256}:p1:b2",
+                    type="text",
+                    block_index=2,
+                    paragraphs=[
+                        Paragraph(
+                            text="The product code identifies the financial product.", index=0
+                        ),
+                        Paragraph(text="Refer to STTM_PRODUCT for details.", index=1),
+                    ],
+                ),
             ],
-            word_count=15, character_count=100,
+            word_count=15,
+            character_count=100,
         ),
         Page(
             id=f"{sha256}:p2",
             page_number=2,
             blocks=[
-                Block(id=f"{sha256}:p2:b0", type="heading", level=2, block_index=0, paragraphs=[Paragraph(text="1.2 Rate Code", index=0)]),
-                Block(id=f"{sha256}:p2:b1", type="text", block_index=1, paragraphs=[
-                    Paragraph(text="See Chapter 8 for interest rate configuration.", index=0),
-                    Paragraph(text="Rate codes are defined in the system.", index=1),
-                ]),
+                Block(
+                    id=f"{sha256}:p2:b0",
+                    type="heading",
+                    level=2,
+                    block_index=0,
+                    paragraphs=[Paragraph(text="1.2 Rate Code", index=0)],
+                ),
+                Block(
+                    id=f"{sha256}:p2:b1",
+                    type="text",
+                    block_index=1,
+                    paragraphs=[
+                        Paragraph(text="See Chapter 8 for interest rate configuration.", index=0),
+                        Paragraph(text="Rate codes are defined in the system.", index=1),
+                    ],
+                ),
             ],
-            word_count=18, character_count=120,
+            word_count=18,
+            character_count=120,
         ),
         Page(
             id=f"{sha256}:p3",
             page_number=3,
             blocks=[
-                Block(id=f"{sha256}:p3:b0", type="heading", level=1, block_index=0, paragraphs=[Paragraph(text="Chapter 2: Configuration", index=0)]),
-                Block(id=f"{sha256}:p3:b1", type="heading", level=2, block_index=1, paragraphs=[Paragraph(text="2.1 Setup", index=0)]),
-                Block(id=f"{sha256}:p3:b2", type="text", block_index=2, paragraphs=[Paragraph(text="Follow these steps to configure the system.", index=0)]),
+                Block(
+                    id=f"{sha256}:p3:b0",
+                    type="heading",
+                    level=1,
+                    block_index=0,
+                    paragraphs=[Paragraph(text="Chapter 2: Configuration", index=0)],
+                ),
+                Block(
+                    id=f"{sha256}:p3:b1",
+                    type="heading",
+                    level=2,
+                    block_index=1,
+                    paragraphs=[Paragraph(text="2.1 Setup", index=0)],
+                ),
+                Block(
+                    id=f"{sha256}:p3:b2",
+                    type="text",
+                    block_index=2,
+                    paragraphs=[
+                        Paragraph(text="Follow these steps to configure the system.", index=0)
+                    ],
+                ),
             ],
-            word_count=10, character_count=60,
+            word_count=10,
+            character_count=60,
         ),
     ]
 
@@ -72,8 +124,8 @@ def sample_document() -> Document:
         absolute_path="/tmp/test_doc.pdf",
         sha256=sha256,
         file_size_bytes=1024,
-        last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
-        created_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        last_modified=datetime(2024, 1, 1, tzinfo=UTC),
+        created_time=datetime(2024, 1, 1, tzinfo=UTC),
         mime_type="application/pdf",
         metadata=DocumentMetadata(title="Test Document", page_count=3),
         table_of_contents=toc,

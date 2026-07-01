@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 from oracle_flexcube_copilot.exceptions import ScannerError
 
 
-def scan_pdfs(root_dir: Path) -> Generator[Path, None, None]:
+def scan_pdfs(root_dir: Path) -> Generator[Path]:
     """Recursively yield PDF files under *root_dir* in deterministic order.
 
     Hidden files (directories or files whose name starts with ``.``) are

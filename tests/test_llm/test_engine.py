@@ -1,6 +1,6 @@
 """Tests for LLMEngine."""
 
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 from oracle_flexcube_copilot.llm.engine import LLMEngine
 
@@ -20,11 +20,13 @@ def test_generate_returns_text() -> None:
 def test_stream_yields_tokens() -> None:
     """LLMEngine.stream() should yield each token from the model."""
     mock_client = Mock()
-    mock_client.generate.return_value = iter([
-        Mock(response="This "),
-        Mock(response="is "),
-        Mock(response="the answer."),
-    ])
+    mock_client.generate.return_value = iter(
+        [
+            Mock(response="This "),
+            Mock(response="is "),
+            Mock(response="the answer."),
+        ]
+    )
 
     engine = LLMEngine(client=mock_client)
     tokens = list(engine.stream("What is STTM_PRODUCT?"))

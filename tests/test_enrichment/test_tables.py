@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-import pytest
-
-from oracle_flexcube_copilot.enrichment.tables import extract_tables, _is_likely_table, _parse_table_lines, _detect_table_in_text
+from oracle_flexcube_copilot.enrichment.tables import (
+    _is_likely_table,
+    extract_tables,
+)
 from oracle_flexcube_copilot.ingestion.models import (
     Block,
     Document,
     DocumentMetadata,
     Page,
     Paragraph,
+)
+from oracle_flexcube_copilot.ingestion.models import (
     TableData as IngestionTableData,
 )
 
@@ -25,8 +28,8 @@ def _make_doc(pages: list[Page], doc_id: str = "abc123") -> Document:
         absolute_path="/tmp/tables_test.pdf",
         sha256=doc_id,
         file_size_bytes=1024,
-        last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
-        created_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        last_modified=datetime(2024, 1, 1, tzinfo=UTC),
+        created_time=datetime(2024, 1, 1, tzinfo=UTC),
         metadata=DocumentMetadata(page_count=len(pages)),
         pages=pages,
     )
@@ -80,7 +83,9 @@ class TestExtractTables:
             id="abc123:p5",
             page_number=5,
             blocks=[
-                Block(id="abc123:p5:b0", type="table", block_index=0, paragraphs=[], table=table_data),
+                Block(
+                    id="abc123:p5:b0", type="table", block_index=0, paragraphs=[], table=table_data
+                ),
             ],
         )
         doc = _make_doc([page])
@@ -94,7 +99,9 @@ class TestExtractTables:
             id="mysha:p1",
             page_number=1,
             blocks=[
-                Block(id="mysha:p1:b0", type="table", block_index=0, paragraphs=[], table=table_data),
+                Block(
+                    id="mysha:p1:b0", type="table", block_index=0, paragraphs=[], table=table_data
+                ),
             ],
         )
         doc = _make_doc([page], doc_id="mysha")
@@ -111,7 +118,9 @@ class TestExtractTables:
             id="abc123:p1",
             page_number=1,
             blocks=[
-                Block(id="abc123:p1:b0", type="table", block_index=0, paragraphs=[], table=table_data),
+                Block(
+                    id="abc123:p1:b0", type="table", block_index=0, paragraphs=[], table=table_data
+                ),
             ],
         )
         doc = _make_doc([page])
@@ -124,12 +133,20 @@ class TestExtractTables:
         td1 = IngestionTableData(headers=["A"], rows=[["1"]])
         td2 = IngestionTableData(headers=["B", "C"], rows=[["2", "3"]])
         pages = [
-            Page(id="abc123:p1", page_number=1, blocks=[
-                Block(id="abc123:p1:b0", type="table", block_index=0, paragraphs=[], table=td1),
-            ]),
-            Page(id="abc123:p2", page_number=2, blocks=[
-                Block(id="abc123:p2:b0", type="table", block_index=0, paragraphs=[], table=td2),
-            ]),
+            Page(
+                id="abc123:p1",
+                page_number=1,
+                blocks=[
+                    Block(id="abc123:p1:b0", type="table", block_index=0, paragraphs=[], table=td1),
+                ],
+            ),
+            Page(
+                id="abc123:p2",
+                page_number=2,
+                blocks=[
+                    Block(id="abc123:p2:b0", type="table", block_index=0, paragraphs=[], table=td2),
+                ],
+            ),
         ]
         doc = _make_doc(pages)
         tables = extract_tables(doc)
@@ -213,7 +230,9 @@ class TestExtractTables:
             id="abc123:p1",
             page_number=1,
             blocks=[
-                Block(id="abc123:p1:b0", type="table", block_index=0, paragraphs=[], table=table_data),
+                Block(
+                    id="abc123:p1:b0", type="table", block_index=0, paragraphs=[], table=table_data
+                ),
             ],
         )
         doc = _make_doc([page])
@@ -227,6 +246,7 @@ class TestIsLikelyTable:
     def test_consistent_columns_detected(self) -> None:
         """Lines with consistent multi-space columns should be detected as table."""
         import re
+
         lines = [
             "Name    Age    City",
             "Alice   30     NYC",
@@ -237,6 +257,7 @@ class TestIsLikelyTable:
     def test_inconsistent_columns_rejected(self) -> None:
         """Lines with wildly different column counts should not be a table."""
         import re
+
         lines = [
             "This is a single paragraph of text.",
             "Another sentence with no columns at all.",

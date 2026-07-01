@@ -5,9 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
-from oracle_flexcube_copilot.ingestion.models import Document, DocumentMetadata
+from oracle_flexcube_copilot.ingestion.models import Document
 from oracle_flexcube_copilot.ingestion.service import DocumentIngestionService
 
 
@@ -52,13 +50,17 @@ class TestDocumentIngestionService:
         assert document.file_size_bytes > 0
         assert document.mime_type == "application/pdf"
 
-    def test_ingest_document_skips_encrypted(self, tmp_data_dir: Path, encrypted_pdf_path: Path) -> None:
+    def test_ingest_document_skips_encrypted(
+        self, tmp_data_dir: Path, encrypted_pdf_path: Path
+    ) -> None:
         """Encrypted PDFs should be skipped (return None)."""
         service = DocumentIngestionService(manifest_dir=tmp_data_dir / "cache")
         document = service.ingest_document(encrypted_pdf_path)
         assert document is None
 
-    def test_ingest_document_skips_corrupted(self, tmp_data_dir: Path, corrupted_pdf_path: Path) -> None:
+    def test_ingest_document_skips_corrupted(
+        self, tmp_data_dir: Path, corrupted_pdf_path: Path
+    ) -> None:
         """Corrupted PDFs should be skipped (return None)."""
         service = DocumentIngestionService(manifest_dir=tmp_data_dir / "cache")
         document = service.ingest_document(corrupted_pdf_path)
@@ -71,13 +73,17 @@ class TestDocumentIngestionService:
         document = service.ingest_document(empty_pdf_path)
         assert document is None
 
-    def test_ingest_document_skips_missing(self, tmp_data_dir: Path, missing_pdf_path: Path) -> None:
+    def test_ingest_document_skips_missing(
+        self, tmp_data_dir: Path, missing_pdf_path: Path
+    ) -> None:
         """Missing PDFs should be skipped (return None)."""
         service = DocumentIngestionService(manifest_dir=tmp_data_dir / "cache")
         document = service.ingest_document(missing_pdf_path)
         assert document is None
 
-    def test_ingest_directory(self, tmp_data_dir: Path, valid_pdf_path: Path, multi_page_pdf_path: Path) -> None:
+    def test_ingest_directory(
+        self, tmp_data_dir: Path, valid_pdf_path: Path, multi_page_pdf_path: Path
+    ) -> None:
         """ingest_directory should process all PDFs and return Documents."""
         cache_dir = tmp_data_dir / "cache"
         service = DocumentIngestionService(manifest_dir=cache_dir)
@@ -86,7 +92,9 @@ class TestDocumentIngestionService:
         assert len(documents) == 2
         assert all(isinstance(d, Document) for d in documents)
 
-    def test_ingest_directory_creates_manifest(self, tmp_data_dir: Path, valid_pdf_path: Path) -> None:
+    def test_ingest_directory_creates_manifest(
+        self, tmp_data_dir: Path, valid_pdf_path: Path
+    ) -> None:
         """The manifest should be written after ingestion."""
         cache_dir = tmp_data_dir / "cache"
         service = DocumentIngestionService(manifest_dir=cache_dir)
@@ -125,7 +133,9 @@ class TestDocumentIngestionService:
         service = DocumentIngestionService(manifest_dir=tmp_data_dir / "cache")
         assert service.load_manifest() is None
 
-    def test_document_has_blocks_and_paragraphs(self, tmp_data_dir: Path, valid_pdf_path: Path) -> None:
+    def test_document_has_blocks_and_paragraphs(
+        self, tmp_data_dir: Path, valid_pdf_path: Path
+    ) -> None:
         """Parsed documents should have blocks with paragraphs."""
         service = DocumentIngestionService(manifest_dir=tmp_data_dir / "cache")
         document = service.ingest_document(valid_pdf_path)

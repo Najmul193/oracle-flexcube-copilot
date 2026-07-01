@@ -17,14 +17,14 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProcessingStage(str, Enum):
     """Pipeline processing stages for resumability."""
+
     DISCOVERED = "discovered"
     PARSED = "parsed"
     ENRICHED = "enriched"
@@ -86,21 +86,29 @@ class Paragraph(BaseModel):
 
 def _temp_id() -> str:
     """Generate a temporary block/page ID before stable IDs are assigned."""
-    from uuid import uuid4
+
     return f"tmp:{uuid4().hex[:12]}"
 
 
 class Block(BaseModel):
     """A structural block on a page (heading, text body, list, table, figure, etc.)."""
 
-    id: str = Field(default_factory=_temp_id, description="Stable block ID: doc_sha256:p{page}:b{block}")
+    id: str = Field(
+        default_factory=_temp_id, description="Stable block ID: doc_sha256:p{page}:b{block}"
+    )
     type: str = Field(description="Block type: heading, text, list, table, figure, etc.")
-    level: int | None = Field(default=None, description="Heading level (1-6) if type is heading, else None")
-    paragraphs: list[Paragraph] = Field(default_factory=list, description="Paragraphs contained in this block")
+    level: int | None = Field(
+        default=None, description="Heading level (1-6) if type is heading, else None"
+    )
+    paragraphs: list[Paragraph] = Field(
+        default_factory=list, description="Paragraphs contained in this block"
+    )
     block_index: int = Field(description="Zero-based position of this block on the page")
     image: ImageInfo | None = Field(default=None, description="Image metadata if type is figure")
     table: TableData | None = Field(default=None, description="Table data if type is table")
-    cross_references: list[Reference] = Field(default_factory=list, description="Cross-references found in this block")
+    cross_references: list[Reference] = Field(
+        default_factory=list, description="Cross-references found in this block"
+    )
 
     model_config = ConfigDict(frozen=True)
 
@@ -108,7 +116,9 @@ class Block(BaseModel):
 class Page(BaseModel):
     """A single page extracted from a PDF document."""
 
-    id: str = Field(default_factory=_temp_id, description="Stable page ID: doc_sha256:p{page_number}")
+    id: str = Field(
+        default_factory=_temp_id, description="Stable page ID: doc_sha256:p{page_number}"
+    )
     page_number: int = Field(description="One-based page number within the document")
     blocks: list[Block] = Field(default_factory=list, description="Structural blocks on this page")
     word_count: int = Field(default=0, description="Total number of words on this page")
@@ -127,9 +137,13 @@ class DocumentMetadata(BaseModel):
     producer: str = Field(default="", description="PDF producer (e.g. iText, Apache)")
     creator: str = Field(default="", description="Application that created the document")
     creation_date: datetime | None = Field(default=None, description="Document creation timestamp")
-    modification_date: datetime | None = Field(default=None, description="Last modification timestamp")
+    modification_date: datetime | None = Field(
+        default=None, description="Last modification timestamp"
+    )
     page_count: int = Field(default=0, description="Total number of pages in the document")
-    processing_stage: ProcessingStage = Field(default=ProcessingStage.DISCOVERED, description="Current stage in pipeline")
+    processing_stage: ProcessingStage = Field(
+        default=ProcessingStage.DISCOVERED, description="Current stage in pipeline"
+    )
 
 
 class TOCEntry(BaseModel):
@@ -151,8 +165,12 @@ class Document(BaseModel):
     last_modified: datetime = Field(description="File last-modified timestamp")
     created_time: datetime = Field(description="File creation timestamp")
     mime_type: str = Field(default="application/pdf", description="MIME type of the file")
-    metadata: DocumentMetadata = Field(default_factory=DocumentMetadata, description="PDF document metadata")
-    table_of_contents: list[TOCEntry] = Field(default_factory=list, description="Document table of contents")
+    metadata: DocumentMetadata = Field(
+        default_factory=DocumentMetadata, description="PDF document metadata"
+    )
+    table_of_contents: list[TOCEntry] = Field(
+        default_factory=list, description="Document table of contents"
+    )
     pages: list[Page] = Field(default_factory=list, description="List of pages in the document")
 
     @property

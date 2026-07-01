@@ -20,12 +20,12 @@ class VectorRetriever:
     def retrieve(self, query: str, top_k: int = 5) -> list[SearchResult]:
         """Perform semantic search for a query string."""
         logger.info(f"Vector search for query: '{query}'")
-        
+
         # 1. Embed the query
         query_vector = self.embedder.embed(query)
-        
+
         # 2. Search ChromaDB
         results = self.indexer.search(query_vector, top_k=top_k)
-        
+
         logger.debug(f"Retrieved {len(results)} chunks.")
         return results

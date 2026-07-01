@@ -19,7 +19,9 @@ class TestScanPDFs:
         assert len(results) == 1
         assert results[0] == valid_pdf_path.resolve()
 
-    def test_scans_multiple_pdfs(self, tmp_data_dir: Path, valid_pdf_path: Path, multi_page_pdf_path: Path) -> None:
+    def test_scans_multiple_pdfs(
+        self, tmp_data_dir: Path, valid_pdf_path: Path, multi_page_pdf_path: Path
+    ) -> None:
         """Multiple PDFs should all be discovered."""
         results = list(scan_pdfs(tmp_data_dir))
         assert len(results) == 2

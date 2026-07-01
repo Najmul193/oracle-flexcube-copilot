@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 from oracle_flexcube_copilot.enrichment.headings import (
     get_heading_path,
     heading_tree_to_flat,
@@ -45,17 +47,39 @@ class TestNormalizeHeadings:
 
     def test_empty_document(self) -> None:
         """A document with no headings should return empty tree."""
-        from oracle_flexcube_copilot.ingestion.models import Block, Document, DocumentMetadata, Page, Paragraph
-        from datetime import datetime, timezone
+        from datetime import datetime
+
+        from oracle_flexcube_copilot.ingestion.models import (
+            Block,
+            Document,
+            DocumentMetadata,
+            Page,
+            Paragraph,
+        )
+
         doc = Document(
-            id="test", filename="empty.pdf", absolute_path="/tmp/empty.pdf",
-            sha256="abc", file_size_bytes=0,
-            last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
-            created_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            id="test",
+            filename="empty.pdf",
+            absolute_path="/tmp/empty.pdf",
+            sha256="abc",
+            file_size_bytes=0,
+            last_modified=datetime(2024, 1, 1, tzinfo=UTC),
+            created_time=datetime(2024, 1, 1, tzinfo=UTC),
             metadata=DocumentMetadata(page_count=1),
-            pages=[Page(id="test:p1", page_number=1, blocks=[
-                Block(id="test:p1:b0", type="text", block_index=0, paragraphs=[Paragraph(text="Some text", index=0)])
-            ])],
+            pages=[
+                Page(
+                    id="test:p1",
+                    page_number=1,
+                    blocks=[
+                        Block(
+                            id="test:p1:b0",
+                            type="text",
+                            block_index=0,
+                            paragraphs=[Paragraph(text="Some text", index=0)],
+                        )
+                    ],
+                )
+            ],
         )
         tree = normalize_headings(doc)
         assert tree == []
@@ -100,20 +124,55 @@ class TestHeadingTreeEdgeCases:
 
     def test_three_levels_deep(self) -> None:
         """Should handle 3 levels of heading nesting."""
-        from oracle_flexcube_copilot.ingestion.models import Block, Document, DocumentMetadata, Page, Paragraph
-        from datetime import datetime, timezone
+        from datetime import datetime
+
+        from oracle_flexcube_copilot.ingestion.models import (
+            Block,
+            Document,
+            DocumentMetadata,
+            Page,
+            Paragraph,
+        )
+
         sha = "threelevel"
         doc = Document(
-            id=sha, filename="deep.pdf", absolute_path="/tmp/deep.pdf",
-            sha256=sha, file_size_bytes=0,
-            last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
-            created_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            id=sha,
+            filename="deep.pdf",
+            absolute_path="/tmp/deep.pdf",
+            sha256=sha,
+            file_size_bytes=0,
+            last_modified=datetime(2024, 1, 1, tzinfo=UTC),
+            created_time=datetime(2024, 1, 1, tzinfo=UTC),
             metadata=DocumentMetadata(page_count=1),
-            pages=[Page(id=f"{sha}:p1", page_number=1, blocks=[
-                Block(id=f"{sha}:p1:b0", type="heading", level=1, block_index=0, paragraphs=[Paragraph(text="Chapter 1", index=0)]),
-                Block(id=f"{sha}:p1:b1", type="heading", level=2, block_index=1, paragraphs=[Paragraph(text="Section 1.1", index=0)]),
-                Block(id=f"{sha}:p1:b2", type="heading", level=3, block_index=2, paragraphs=[Paragraph(text="Subsection 1.1.1", index=0)]),
-            ])],
+            pages=[
+                Page(
+                    id=f"{sha}:p1",
+                    page_number=1,
+                    blocks=[
+                        Block(
+                            id=f"{sha}:p1:b0",
+                            type="heading",
+                            level=1,
+                            block_index=0,
+                            paragraphs=[Paragraph(text="Chapter 1", index=0)],
+                        ),
+                        Block(
+                            id=f"{sha}:p1:b1",
+                            type="heading",
+                            level=2,
+                            block_index=1,
+                            paragraphs=[Paragraph(text="Section 1.1", index=0)],
+                        ),
+                        Block(
+                            id=f"{sha}:p1:b2",
+                            type="heading",
+                            level=3,
+                            block_index=2,
+                            paragraphs=[Paragraph(text="Subsection 1.1.1", index=0)],
+                        ),
+                    ],
+                )
+            ],
         )
         tree = normalize_headings(doc)
         assert len(tree) == 1

@@ -2,21 +2,27 @@
 
 from __future__ import annotations
 
-from oracle_flexcube_copilot.ingestion.models import Document, Page, Block, Paragraph, DocumentMetadata
-from oracle_flexcube_copilot.ingestion.scanner import scan_pdfs
 from oracle_flexcube_copilot.ingestion.loader import load_pdf
+from oracle_flexcube_copilot.ingestion.models import (
+    Block,
+    Document,
+    DocumentMetadata,
+    Page,
+    Paragraph,
+)
 from oracle_flexcube_copilot.ingestion.parser import parse_document_metadata, parse_pages
+from oracle_flexcube_copilot.ingestion.scanner import scan_pdfs
 from oracle_flexcube_copilot.ingestion.service import DocumentIngestionService
 
 __all__ = [
-    "Document",
-    "Page",
     "Block",
-    "Paragraph",
+    "Document",
+    "DocumentIngestionService",
     "DocumentMetadata",
-    "scan_pdfs",
+    "Page",
+    "Paragraph",
     "load_pdf",
     "parse_document_metadata",
     "parse_pages",
-    "DocumentIngestionService",
+    "scan_pdfs",
 ]

@@ -5,22 +5,22 @@ Adds TOC, heading trees, sections, cross-references, and table structure.
 
 from __future__ import annotations
 
-from oracle_flexcube_copilot.enrichment.service import DocumentEnrichmentService
 from oracle_flexcube_copilot.enrichment.models import (
-    EnrichedDocument,
-    Section,
     EnrichedBlock,
+    EnrichedDocument,
     HeadingNode,
     Reference,
+    Section,
     TableData,
 )
+from oracle_flexcube_copilot.enrichment.service import DocumentEnrichmentService
 
 __all__ = [
     "DocumentEnrichmentService",
-    "EnrichedDocument",
-    "Section",
     "EnrichedBlock",
+    "EnrichedDocument",
     "HeadingNode",
     "Reference",
+    "Section",
     "TableData",
 ]

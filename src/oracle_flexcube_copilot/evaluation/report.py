@@ -17,6 +17,6 @@ def generate_markdown_report(metrics: EvalMetrics) -> str:
 | MRR | {metrics.mrr:.3f} |
 
 ### Performance
-* **Avg Embedding Latency**: {metrics.avg_embedding_latency*1000:.1f} ms
-* **Avg Retrieval Latency**: {metrics.avg_retrieval_latency*1000:.1f} ms
+* **Avg Embedding Latency**: {metrics.avg_embedding_latency * 1000:.1f} ms
+* **Avg Retrieval Latency**: {metrics.avg_retrieval_latency * 1000:.1f} ms
 """

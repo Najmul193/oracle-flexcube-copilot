@@ -1,7 +1,7 @@
 """Qwen LLM Integration Engine."""
 
 import logging
-from typing import Iterator
+from collections.abc import Iterator
 
 from ollama import Client
 
@@ -49,7 +49,7 @@ class LLMEngine:
             options={
                 "temperature": self.temperature,
                 "num_predict": self.max_tokens,
-            }
+            },
         )
         return response.response
 
@@ -70,7 +70,7 @@ class LLMEngine:
             options={
                 "temperature": self.temperature,
                 "num_predict": self.max_tokens,
-            }
+            },
         ):
             if chunk.response:
                 yield chunk.response

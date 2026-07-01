@@ -30,7 +30,9 @@ class TestComputeSHA256:
         sha2 = compute_sha256(valid_pdf_path)
         assert sha1 == sha2
 
-    def test_different_files_different_hash(self, valid_pdf_path: Path, multi_page_pdf_path: Path) -> None:
+    def test_different_files_different_hash(
+        self, valid_pdf_path: Path, multi_page_pdf_path: Path
+    ) -> None:
         """Different files should produce different hashes."""
         sha1 = compute_sha256(valid_pdf_path)
         sha2 = compute_sha256(multi_page_pdf_path)

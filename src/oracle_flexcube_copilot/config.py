@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -39,12 +40,18 @@ class Settings(BaseSettings):
     top_k_retrieval: int = 5
     retrieval_alpha: float = 0.5  # 0 = pure BM25, 1 = pure dense
 
+    # Prompting
+    prompt_max_tokens: int = 4096
+    prompt_min_score: float = 0.0
+
     # Logging
     log_level: str = "INFO"
     log_format: Literal["json", "text"] = "text"
 
     # ChromaDB collection name
-    chroma_collection_name: str = Field(default="oracle-flexcube-v1", description="Name of the ChromaDB collection")
+    chroma_collection_name: str = Field(
+        default="oracle-flexcube-v1", description="Name of the ChromaDB collection"
+    )
 
     # Pipeline Versioning
     pipeline_version: str = "1.0.0"

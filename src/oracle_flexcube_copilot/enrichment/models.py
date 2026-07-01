@@ -15,11 +15,10 @@ Represents the hierarchy:
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 
-from oracle_flexcube_copilot.ingestion.models import TOCEntry, Page
+from oracle_flexcube_copilot.ingestion.models import Page, TOCEntry
 
 
 class HeadingNode(BaseModel):
@@ -30,7 +29,9 @@ class HeadingNode(BaseModel):
     normalized_number: str = Field(default="", description="Normalized section number (e.g. 1.2.3)")
     page: int = Field(default=0, description="Page number where this heading starts")
     children: list[HeadingNode] = Field(default_factory=list, description="Child headings")
-    block_ids: list[str] = Field(default_factory=list, description="Block IDs belonging to this heading")
+    block_ids: list[str] = Field(
+        default_factory=list, description="Block IDs belonging to this heading"
+    )
 
 
 class Section(BaseModel):
@@ -44,7 +45,9 @@ class Section(BaseModel):
     child_ids: list[str] = Field(default_factory=list, description="IDs of child sections")
     page_start: int = Field(description="First page of this section")
     page_end: int = Field(description="Last page of this section")
-    block_ids: list[str] = Field(default_factory=list, description="Block IDs belonging to this section")
+    block_ids: list[str] = Field(
+        default_factory=list, description="Block IDs belonging to this section"
+    )
     word_count: int = Field(default=0, description="Total word count in this section")
 
 
@@ -53,7 +56,9 @@ class EnrichedBlock(BaseModel):
 
     id: str = Field(description="Block ID (stable, matches ingestion Block.id)")
     section_id: str | None = Field(default=None, description="Section this block belongs to")
-    heading_path: list[str] = Field(default_factory=list, description="Hierarchical heading path to this block")
+    heading_path: list[str] = Field(
+        default_factory=list, description="Hierarchical heading path to this block"
+    )
     depth: int = Field(default=0, description="Depth in the heading hierarchy")
 
 
@@ -62,8 +67,12 @@ class Reference(BaseModel):
 
     id: str = Field(default="", description="Stable reference identifier")
     text: str = Field(description="The raw reference text as found")
-    target: str = Field(default="", description="Extracted target (e.g. 'Chapter 8', 'STTM_PRODUCT')")
-    reference_type: str = Field(default="cross_ref", description="Type: cross_ref, see_also, appendix_ref")
+    target: str = Field(
+        default="", description="Extracted target (e.g. 'Chapter 8', 'STTM_PRODUCT')"
+    )
+    reference_type: str = Field(
+        default="cross_ref", description="Type: cross_ref, see_also, appendix_ref"
+    )
     source_block_id: str = Field(default="", description="Block ID where this reference was found")
     source_page: int | None = Field(default=None, description="Page where this reference appears")
 
@@ -102,17 +111,29 @@ class EnrichedDocument(BaseModel):
 
     # Hierarchical structure
     toc: list[TOCEntry] = Field(default_factory=list, description="Table of contents entries")
-    heading_tree: list[HeadingNode] = Field(default_factory=list, description="Nested heading hierarchy")
+    heading_tree: list[HeadingNode] = Field(
+        default_factory=list, description="Nested heading hierarchy"
+    )
     sections: list[Section] = Field(default_factory=list, description="Flat list of all sections")
 
     # Enriched data
-    enriched_blocks: list[EnrichedBlock] = Field(default_factory=list, description="Blocks with section context")
-    cross_references: list[Reference] = Field(default_factory=list, description="All cross-references found")
-    oracle_entities: list[OracleEntity] = Field(default_factory=list, description="Extracted Oracle-specific entities")
+    enriched_blocks: list[EnrichedBlock] = Field(
+        default_factory=list, description="Blocks with section context"
+    )
+    cross_references: list[Reference] = Field(
+        default_factory=list, description="All cross-references found"
+    )
+    oracle_entities: list[OracleEntity] = Field(
+        default_factory=list, description="Extracted Oracle-specific entities"
+    )
     tables: list[TableData] = Field(default_factory=list, description="All tables found")
-    pages: list[Page] = Field(default_factory=list, description="Original pages containing raw text blocks")
+    pages: list[Page] = Field(
+        default_factory=list, description="Original pages containing raw text blocks"
+    )
 
-    module_classification: str = Field(default="Unknown", description="High-level module classification (e.g. CASA, Treasury)")
+    module_classification: str = Field(
+        default="Unknown", description="High-level module classification (e.g. CASA, Treasury)"
+    )
 
     ingestion_timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class IndexMetrics(BaseModel):
@@ -31,9 +31,12 @@ class SearchResult(BaseModel):
     chunk_id: str = Field(description="Unique ID of the chunk")
     score: float = Field(description="Relevance score (e.g. cosine distance, BM25 score)")
     source_document: str = Field(description="Name of the source document")
-    page: int = Field(description="Page number of the chunk")
+    page: int = Field(description="Page number of the chunk (1-based)")
     heading: str = Field(description="Closest heading or section title")
-    oracle_entities: list[str] = Field(default_factory=list, description="Extracted Oracle entities in chunk")
+    oracle_entities: list[str] = Field(
+        default_factory=list, description="Extracted Oracle entities in chunk"
+    )
     text: str = Field(description="The text content of the chunk")
-    retrieval_method: str = Field(description="The retrieval engine used (e.g. vector, bm25, exact)")
-
+    retrieval_method: str = Field(
+        description="The retrieval engine used (e.g. vector, bm25, exact)"
+    )

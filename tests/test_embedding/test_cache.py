@@ -32,7 +32,7 @@ class TestEmbeddingCache:
         cache.set("hello", "model_x", [0.1, 0.2], chunk_id="test-chunk-1")
         vector = cache.get("hello", "model_x")
         assert vector == [0.1, 0.2]
-        
+
         # Verify metadata
         path = cache._get_cache_path("hello", "model_x")
         data = json.loads(path.read_text("utf-8"))
@@ -55,5 +55,5 @@ class TestEmbeddingCache:
         # Corrupt it
         path = cache._get_cache_path("hello", "model_x")
         path.write_text("invalid json")
-        
+
         assert cache.get("hello", "model_x") is None

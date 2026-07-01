@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from oracle_flexcube_copilot.enrichment.models import HeadingNode
-from oracle_flexcube_copilot.ingestion.models import Block, Document, TOCEntry
+from oracle_flexcube_copilot.ingestion.models import Block, Document
 
 logger = logging.getLogger("oracle_flexcube_copilot.enrichment.headings")
 
@@ -38,9 +37,7 @@ def normalize_headings(document: Document) -> list[HeadingNode]:
     return root
 
 
-def _build_heading_tree(
-    headings: list[tuple[int, int, Block]], doc_id: str
-) -> list[HeadingNode]:
+def _build_heading_tree(headings: list[tuple[int, int, Block]], doc_id: str) -> list[HeadingNode]:
     """Build a nested heading tree from a flat sorted list of heading blocks.
 
     Args:

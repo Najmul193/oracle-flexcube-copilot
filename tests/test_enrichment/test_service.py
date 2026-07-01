@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from oracle_flexcube_copilot.enrichment.service import DocumentEnrichmentService
-from oracle_flexcube_copilot.enrichment.models import EnrichedDocument, Section, HeadingNode
 from oracle_flexcube_copilot.enrichment.interfaces import DocumentEnricher
+from oracle_flexcube_copilot.enrichment.models import EnrichedDocument
+from oracle_flexcube_copilot.enrichment.service import DocumentEnrichmentService
 from oracle_flexcube_copilot.ingestion.models import Document
 
 

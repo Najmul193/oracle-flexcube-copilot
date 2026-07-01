@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import fitz
-import pytest
 
 from oracle_flexcube_copilot.ingestion.parser import parse_document_metadata, parse_pages
 

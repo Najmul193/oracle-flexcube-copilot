@@ -9,11 +9,11 @@ from typing import Any
 import chromadb
 from chromadb.config import Settings
 
-from oracle_flexcube_copilot.chunking.models import Chunk, ChunkMetadata
+from oracle_flexcube_copilot.chunking.models import ChunkMetadata
 from oracle_flexcube_copilot.config import settings
 from oracle_flexcube_copilot.embedding.models import EmbeddedChunk
-from oracle_flexcube_copilot.indexing.models import IndexHealth, IndexMetrics, SearchResult
 from oracle_flexcube_copilot.indexing.entity_index import OracleEntityIndex
+from oracle_flexcube_copilot.indexing.models import IndexHealth, IndexMetrics, SearchResult
 
 logger = logging.getLogger("oracle_flexcube_copilot.indexing.indexer")
 
@@ -25,33 +25,31 @@ class ChromaIndexer:
         """Initialize persistent ChromaDB client."""
         self.db_dir = db_dir or str(settings.resolved_cache_dir.parent / "chroma_db")
         self.collection_name = collection_name or settings.chroma_collection_name
-        
+
         self.client = chromadb.PersistentClient(
-            path=self.db_dir,
-            settings=Settings(anonymized_telemetry=False)
+            path=self.db_dir, settings=Settings(anonymized_telemetry=False)
         )
         self.collection = self.client.get_or_create_collection(
-            name=self.collection_name,
-            metadata={"hnsw:space": "cosine"}
+            name=self.collection_name, metadata={"hnsw:space": "cosine"}
         )
         self.entity_index = OracleEntityIndex(db_dir=self.db_dir)
 
     def _serialize_metadata(self, chunk: EmbeddedChunk) -> dict[str, Any]:
         """Convert a chunk to flat ChromaDB-compatible metadata."""
         c = chunk.chunk
-        
+
         # Safe defaults if metadata is somehow missing
         module_class = ""
         chunking_ver = ""
         embedding_ver = chunk.embedding_version
-        
+
         if c.metadata:
             module_class = c.metadata.module_classification or ""
             chunking_ver = c.metadata.chunking_version or ""
-            
+
         # Serialize nested lists to JSON strings
         heading_path_str = json.dumps(c.heading_path) if c.heading_path else "[]"
-        
+
         # Extract basic info from OracleEntity list
         entities = []
         if c.oracle_entities:
@@ -71,7 +69,7 @@ class ChromaIndexer:
             "processing_stage": "INDEXED",
             "chunking_version": chunking_ver,
             "embedding_version": embedding_ver,
-            "pipeline_version": settings.pipeline_version
+            "pipeline_version": settings.pipeline_version,
         }
         # ChromaDB only accepts str/int/float/bool — sanitize every value
         return {k: self._to_meta_value(v) for k, v in raw.items()}
@@ -121,13 +119,10 @@ class ChromaIndexer:
             metadatas = [self._serialize_metadata(c) for c in to_insert]
 
             self.collection.add(
-                ids=ids,
-                embeddings=embeddings,
-                documents=documents,
-                metadatas=metadatas
+                ids=ids, embeddings=embeddings, documents=documents, metadatas=metadatas
             )
             metrics.chunks_added = len(to_insert)
-            
+
             # Update the indexed status in the objects and index entities
             for c in to_insert:
                 c.chunk.indexed = True
@@ -147,16 +142,13 @@ class ChromaIndexer:
         metadatas = [self._serialize_metadata(c) for c in chunks]
 
         self.collection.upsert(
-            ids=ids,
-            embeddings=embeddings,
-            documents=documents,
-            metadatas=metadatas
+            ids=ids, embeddings=embeddings, documents=documents, metadatas=metadatas
         )
-        
+
         # It's an upsert so Chroma doesn't tell us exactly how many were added vs updated
         # But we treat it as updated
         metrics.chunks_updated = len(chunks)
-        
+
         for c in chunks:
             c.chunk.indexed = True
             # For entity index, simplest is to remove the chunk and re-add to avoid dups/stale
@@ -168,19 +160,19 @@ class ChromaIndexer:
     def delete_document(self, document_id: str) -> IndexMetrics:
         """Delete all chunks belonging to a document."""
         metrics = IndexMetrics()
-        
+
         # Find all chunks for this doc
         results = self.collection.get(where={"document_id": document_id}, include=[])
         ids = results.get("ids", [])
-        
+
         if ids:
             self.collection.delete(ids=ids)
             metrics.chunks_deleted = len(ids)
             metrics.documents_deleted = 1
-            
+
             # Sync with Entity Index
             self.entity_index.remove_document(document_id)
-            
+
         return metrics
 
     def delete_chunk(self, chunk_id: str) -> IndexMetrics:
@@ -189,36 +181,46 @@ class ChromaIndexer:
         self.collection.delete(ids=[chunk_id])
         # Chroma API doesn't return count of deleted, assume 1
         metrics.chunks_deleted = 1
-        
+
         # Sync with Entity Index
         self.entity_index.remove_chunk(chunk_id)
-        
+
         return metrics
 
     def get_chunk(self, chunk_id: str) -> dict[str, Any] | None:
         """Retrieve a raw chunk payload from Chroma."""
-        results = self.collection.get(ids=[chunk_id], include=["metadatas", "documents", "embeddings"])
+        results = self.collection.get(
+            ids=[chunk_id], include=["metadatas", "documents", "embeddings"]
+        )
         if not results or not results.get("ids"):
             return None
-        
+
         return {
             "id": results["ids"][0],
             "document": results["documents"][0] if results.get("documents") is not None else "",
             "metadata": results["metadatas"][0] if results.get("metadatas") is not None else {},
-            "embedding": results["embeddings"][0] if results.get("embeddings") is not None else []
+            "embedding": results["embeddings"][0] if results.get("embeddings") is not None else [],
         }
 
     def get_document(self, document_id: str) -> list[dict[str, Any]]:
         """Retrieve all raw chunk payloads for a document."""
-        results = self.collection.get(where={"document_id": document_id}, include=["metadatas", "documents"])
+        results = self.collection.get(
+            where={"document_id": document_id}, include=["metadatas", "documents"]
+        )
         ids = results.get("ids", [])
         docs = []
         for i, cid in enumerate(ids):
-            docs.append({
-                "id": cid,
-                "document": results["documents"][i] if results.get("documents") is not None else "",
-                "metadata": results["metadatas"][i] if results.get("metadatas") is not None else {},
-            })
+            docs.append(
+                {
+                    "id": cid,
+                    "document": results["documents"][i]
+                    if results.get("documents") is not None
+                    else "",
+                    "metadata": results["metadatas"][i]
+                    if results.get("metadatas") is not None
+                    else {},
+                }
+            )
         return docs
 
     def search(self, query_embedding: list[float], top_k: int = 5) -> list[SearchResult]:
@@ -226,26 +228,29 @@ class ChromaIndexer:
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k,
-            include=["metadatas", "documents", "distances"]
+            include=["metadatas", "documents", "distances"],
         )
-        
+
         if not results or not results.get("ids") or not results["ids"][0]:
             return []
-            
+
         hits = []
         for i, cid in enumerate(results["ids"][0]):
             meta = results["metadatas"][0][i] if results.get("metadatas") is not None else {}
             doc_text = results["documents"][0][i] if results.get("documents") is not None else ""
             distance = results["distances"][0][i] if results.get("distances") is not None else 0.0
-            
+
             # Parse JSON fields safely
             try:
                 entities_list = json.loads(meta.get("oracle_entities", "[]"))
                 entity_names = [e.get("name") for e in entities_list if "name" in e]
             except Exception:
                 entity_names = []
-                
-            page = meta.get("page_start", 0)
+
+            page = int(meta.get("page_start", 0))
+            if page < 1:
+                logger.warning("Chunk %s has invalid page_start=%d; using 1", cid, page)
+                page = 1
             heading = meta.get("section", "")
             if not heading:
                 try:
@@ -255,17 +260,19 @@ class ChromaIndexer:
                 except Exception:
                     pass
 
-            hits.append(SearchResult(
-                chunk_id=cid,
-                score=float(distance),
-                source_document=str(meta.get("document_name", "")),
-                page=int(page),
-                heading=str(heading),
-                oracle_entities=entity_names,
-                text=str(doc_text),
-                retrieval_method="vector"
-            ))
-            
+            hits.append(
+                SearchResult(
+                    chunk_id=cid,
+                    score=float(distance),
+                    source_document=str(meta.get("document_name", "")),
+                    page=int(page),
+                    heading=str(heading),
+                    oracle_entities=entity_names,
+                    text=str(doc_text),
+                    retrieval_method="vector",
+                )
+            )
+
         return hits
 
     def reset_collection(self) -> None:
@@ -275,8 +282,7 @@ class ChromaIndexer:
         except Exception:
             pass
         self.collection = self.client.get_or_create_collection(
-            name=self.collection_name,
-            metadata={"hnsw:space": "cosine"}
+            name=self.collection_name, metadata={"hnsw:space": "cosine"}
         )
         self.entity_index.clear()
 
@@ -289,9 +295,9 @@ class ChromaIndexer:
             # We'll just return the chunk count and true
             return IndexHealth(
                 collection_name=self.collection_name,
-                total_documents=-1, # Complex to calculate natively
+                total_documents=-1,  # Complex to calculate natively
                 total_chunks=total_chunks,
-                is_accessible=True
+                is_accessible=True,
             )
         except Exception as e:
             return IndexHealth(
@@ -299,5 +305,5 @@ class ChromaIndexer:
                 total_documents=0,
                 total_chunks=0,
                 is_accessible=False,
-                error=str(e)
+                error=str(e),
             )

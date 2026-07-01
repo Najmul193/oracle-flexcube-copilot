@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from oracle_flexcube_copilot.enrichment.headings import heading_tree_to_flat, normalize_headings
 from oracle_flexcube_copilot.enrichment.models import HeadingNode, Section
@@ -43,7 +42,12 @@ def build_sections(document: Document) -> list[Section]:
 
         # Collect block IDs for this section (from heading blocks + text blocks up to next heading)
         block_ids = list(heading_node.block_ids)
-        _collect_block_ids(document, heading_node, flat_headings[i + 1] if i + 1 < len(flat_headings) else None, block_ids)
+        _collect_block_ids(
+            document,
+            heading_node,
+            flat_headings[i + 1] if i + 1 < len(flat_headings) else None,
+            block_ids,
+        )
 
         section = Section(
             id=f"{document.id}:sec:{i + 1}",
@@ -107,10 +111,7 @@ def _create_default_section(document: Document) -> list[Section]:
     """
     block_ids = [b.id for page in document.pages for b in page.blocks]
     word_count = sum(
-        len(p.text.split())
-        for page in document.pages
-        for b in page.blocks
-        for p in b.paragraphs
+        len(p.text.split()) for page in document.pages for b in page.blocks for p in b.paragraphs
     )
 
     return [

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 from oracle_flexcube_copilot.enrichment.hierarchy import build_sections
 from oracle_flexcube_copilot.ingestion.models import Document
 
@@ -60,17 +62,39 @@ class TestBuildSections:
 
     def test_empty_document_creates_default(self) -> None:
         """A document with no headings should create a default section."""
-        from oracle_flexcube_copilot.ingestion.models import Block, Document, DocumentMetadata, Page, Paragraph
-        from datetime import datetime, timezone
+        from datetime import datetime
+
+        from oracle_flexcube_copilot.ingestion.models import (
+            Block,
+            Document,
+            DocumentMetadata,
+            Page,
+            Paragraph,
+        )
+
         doc = Document(
-            id="test", filename="no_headings.pdf", absolute_path="/tmp/empty.pdf",
-            sha256="abc", file_size_bytes=0,
-            last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
-            created_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            id="test",
+            filename="no_headings.pdf",
+            absolute_path="/tmp/empty.pdf",
+            sha256="abc",
+            file_size_bytes=0,
+            last_modified=datetime(2024, 1, 1, tzinfo=UTC),
+            created_time=datetime(2024, 1, 1, tzinfo=UTC),
             metadata=DocumentMetadata(page_count=1, title="No Headings"),
-            pages=[Page(id="test:p1", page_number=1, blocks=[
-                Block(id="test:p1:b0", type="text", block_index=0, paragraphs=[Paragraph(text="Some content", index=0)])
-            ])],
+            pages=[
+                Page(
+                    id="test:p1",
+                    page_number=1,
+                    blocks=[
+                        Block(
+                            id="test:p1:b0",
+                            type="text",
+                            block_index=0,
+                            paragraphs=[Paragraph(text="Some content", index=0)],
+                        )
+                    ],
+                )
+            ],
         )
         sections = build_sections(doc)
         assert len(sections) == 1

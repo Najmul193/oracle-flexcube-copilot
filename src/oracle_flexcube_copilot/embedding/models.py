@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
+
 from oracle_flexcube_copilot.chunking.models import Chunk
 
 
@@ -21,9 +22,13 @@ class EmbeddingMetrics(BaseModel):
     """Metrics collected during an embedding batch process."""
 
     chunks_embedded: int = Field(default=0, description="Number of chunks successfully embedded")
-    total_time_seconds: float = Field(default=0.0, description="Total duration of the embedding process")
+    total_time_seconds: float = Field(
+        default=0.0, description="Total duration of the embedding process"
+    )
     average_latency: float = Field(default=0.0, description="Average time per chunk embedding")
-    vectors_per_second: float = Field(default=0.0, description="Throughput: vectors generated per second")
+    vectors_per_second: float = Field(
+        default=0.0, description="Throughput: vectors generated per second"
+    )
     failures: int = Field(default=0, description="Number of failed chunks")
     cache_hits: int = Field(default=0, description="Number of chunks served from cache")
     cache_misses: int = Field(default=0, description="Number of chunks that required generation")

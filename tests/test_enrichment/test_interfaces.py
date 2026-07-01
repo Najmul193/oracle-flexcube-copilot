@@ -8,11 +8,11 @@ from oracle_flexcube_copilot.enrichment.interfaces import (
     HierarchyBuilder,
     ReferenceExtractor,
     SectionBuilder,
-    TOCExtractor,
     TableExtractor,
+    TOCExtractor,
 )
-from oracle_flexcube_copilot.enrichment.service import DocumentEnrichmentService
 from oracle_flexcube_copilot.enrichment.models import EnrichedDocument
+from oracle_flexcube_copilot.enrichment.service import DocumentEnrichmentService
 from oracle_flexcube_copilot.ingestion.models import Document
 
 
@@ -25,6 +25,7 @@ class TestProtocolsAreRuntimeCheckable:
 
     def test_toc_extractor_is_runtime_checkable(self) -> None:
         """TOCExtractor protocol should be runtime-checkable."""
+
         class _Impl:
             def extract(self, document: Document) -> list[dict]:
                 return []
@@ -33,6 +34,7 @@ class TestProtocolsAreRuntimeCheckable:
 
     def test_heading_normalizer_is_runtime_checkable(self) -> None:
         """HeadingNormalizer protocol should be runtime-checkable."""
+
         class _Impl:
             def normalize(self, document: Document) -> list[dict]:
                 return []
@@ -41,6 +43,7 @@ class TestProtocolsAreRuntimeCheckable:
 
     def test_section_builder_is_runtime_checkable(self) -> None:
         """SectionBuilder protocol should be runtime-checkable."""
+
         class _Impl:
             def build(self, document: Document) -> list[dict]:
                 return []
@@ -49,6 +52,7 @@ class TestProtocolsAreRuntimeCheckable:
 
     def test_reference_extractor_is_runtime_checkable(self) -> None:
         """ReferenceExtractor protocol should be runtime-checkable."""
+
         class _Impl:
             def extract(self, document: Document) -> list[dict]:
                 return []
@@ -57,6 +61,7 @@ class TestProtocolsAreRuntimeCheckable:
 
     def test_table_extractor_is_runtime_checkable(self) -> None:
         """TableExtractor protocol should be runtime-checkable."""
+
         class _Impl:
             def extract(self, document: Document) -> list[dict]:
                 return []
@@ -65,6 +70,7 @@ class TestProtocolsAreRuntimeCheckable:
 
     def test_hierarchy_builder_is_runtime_checkable(self) -> None:
         """HierarchyBuilder protocol should be runtime-checkable."""
+
         class _Impl:
             def build(self, document: Document) -> list[dict]:
                 return []
@@ -83,6 +89,7 @@ class TestProtocolConformance:
 
     def test_non_conforming_class_fails(self) -> None:
         """A class without the right method should not satisfy the protocol."""
+
         class _NotAnEnricher:
             def wrong_method(self) -> None:
                 pass

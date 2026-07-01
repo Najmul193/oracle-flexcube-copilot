@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from oracle_flexcube_copilot.chunking.models import Chunk, ChunkMetadata
-from oracle_flexcube_copilot.enrichment.models import OracleEntity, Reference
 
 
 class TestChunkModels:

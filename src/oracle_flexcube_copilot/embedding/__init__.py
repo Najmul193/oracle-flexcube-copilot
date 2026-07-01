@@ -7,8 +7,8 @@ from oracle_flexcube_copilot.embedding.engine import EmbeddingEngine
 from oracle_flexcube_copilot.embedding.models import EmbeddedChunk, EmbeddingMetrics
 
 __all__ = [
+    "EmbeddedChunk",
     "EmbeddingCache",
     "EmbeddingEngine",
-    "EmbeddedChunk",
     "EmbeddingMetrics",
 ]

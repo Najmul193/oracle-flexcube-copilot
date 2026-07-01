@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any
 
 from oracle_flexcube_copilot.enrichment.models import Reference
 from oracle_flexcube_copilot.ingestion.models import Document
@@ -19,7 +18,10 @@ REFERENCE_PATTERNS: list[tuple[str, str]] = [
     (r"Refer\s+Chapter\s+(\d+(?:\.\d+)*)", "cross_ref"),
     (r"as\s+described\s+in\s+(Chapter|Section)\s+(\d+(?:\.\d+)*)", "cross_ref"),
     (r"For\s+more\s+information.*?(?:Chapter|Section)\s+(\d+(?:\.\d+)*)", "cross_ref"),
-    (r"(?:'s\s*interface|'s\s*module|'s\s*functionality)\s+(?:is\s+)?(?:explained|described|covered)\s+in\s+(Chapter|Section)\s+(\d+(?:\.\d+)*)", "cross_ref"),
+    (
+        r"(?:'s\s*interface|'s\s*module|'s\s*functionality)\s+(?:is\s+)?(?:explained|described|covered)\s+in\s+(Chapter|Section)\s+(\d+(?:\.\d+)*)",
+        "cross_ref",
+    ),
     (r"[A-Z]{2,}_[A-Z0-9_]+(?:-[A-Z0-9_]+)*", "entity_ref"),  # STTM_PRODUCT, etc.
     (r"Appendix\s+([A-Z])", "appendix_ref"),
     (r"Table\s+(\d+(?:\.\d+)*)", "table_ref"),
@@ -73,7 +75,9 @@ def _find_references_in_text(text: str, block_id: str, page: int) -> list[Refere
         for match in re.finditer(pattern, text, re.IGNORECASE):
             groups = match.groups()
             if ref_type == "entity_ref" and len(match.groups()) >= 1:
-                target = match.group(1) if match.lastindex and match.lastindex >= 1 else match.group(0)
+                target = (
+                    match.group(1) if match.lastindex and match.lastindex >= 1 else match.group(0)
+                )
             elif len(groups) >= 2:
                 target = f"{groups[0]} {groups[1]}"
             else:

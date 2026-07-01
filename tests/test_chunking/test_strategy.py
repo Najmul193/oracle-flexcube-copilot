@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from oracle_flexcube_copilot.chunking.strategy import SemanticSectionChunker
-from oracle_flexcube_copilot.enrichment.models import EnrichedBlock, EnrichedDocument, Section, OracleEntity, Reference
-from oracle_flexcube_copilot.ingestion.models import Block, Document, DocumentMetadata, Page, Paragraph, TableData
+from oracle_flexcube_copilot.enrichment.models import (
+    EnrichedBlock,
+    EnrichedDocument,
+    Section,
+)
+from oracle_flexcube_copilot.ingestion.models import (
+    Block,
+    Document,
+    DocumentMetadata,
+    Page,
+    Paragraph,
+    TableData,
+)
 
 
 def _make_dummy_document() -> Document:
@@ -17,8 +27,8 @@ def _make_dummy_document() -> Document:
         absolute_path="/tmp/test.pdf",
         sha256="doc_test",
         file_size_bytes=100,
-        last_modified=datetime.now(timezone.utc),
-        created_time=datetime.now(timezone.utc),
+        last_modified=datetime.now(UTC),
+        created_time=datetime.now(UTC),
         metadata=DocumentMetadata(page_count=2, title="Test Doc"),
         pages=[
             Page(
@@ -29,22 +39,26 @@ def _make_dummy_document() -> Document:
                         id="doc_test:p1:b0",
                         type="heading",
                         block_index=0,
-                        paragraphs=[Paragraph(text="Section 1", index=0)]
+                        paragraphs=[Paragraph(text="Section 1", index=0)],
                     ),
                     Block(
                         id="doc_test:p1:b1",
                         type="text",
                         block_index=1,
-                        paragraphs=[Paragraph(text=" ".join(f"WA{i}" for i in range(400)), index=0)]
+                        paragraphs=[
+                            Paragraph(text=" ".join(f"WA{i}" for i in range(400)), index=0)
+                        ],
                     ),
                     Block(
                         id="doc_test:p1:b2",
                         type="text",
                         block_index=2,
-                        paragraphs=[Paragraph(text=" ".join(f"WB{i}" for i in range(400)), index=0)]
+                        paragraphs=[
+                            Paragraph(text=" ".join(f"WB{i}" for i in range(400)), index=0)
+                        ],
                     ),
                 ],
-                word_count=802
+                word_count=802,
             ),
             Page(
                 id="doc_test:p2",
@@ -58,19 +72,19 @@ def _make_dummy_document() -> Document:
                             Paragraph(text="Step 1: Do this", index=0),
                             Paragraph(text="Step 2: Do that", index=1),
                             Paragraph(text="Step 3: Finish", index=2),
-                        ]
+                        ],
                     ),
                     Block(
                         id="doc_test:p2:b1",
                         type="table",
                         block_index=1,
                         paragraphs=[],
-                        table=TableData(headers=["A", "B"], rows=[["1", "2"]])
+                        table=TableData(headers=["A", "B"], rows=[["1", "2"]]),
                     ),
                 ],
-                word_count=10
-            )
-        ]
+                word_count=10,
+            ),
+        ],
     )
 
 
@@ -81,11 +95,18 @@ def _make_dummy_enriched_doc(doc: Document) -> EnrichedDocument:
         level=1,
         page_start=1,
         page_end=2,
-        block_ids=["doc_test:p1:b0", "doc_test:p1:b1", "doc_test:p1:b2", "doc_test:p2:b0", "doc_test:p2:b1"]
+        block_ids=[
+            "doc_test:p1:b0",
+            "doc_test:p1:b1",
+            "doc_test:p1:b2",
+            "doc_test:p2:b0",
+            "doc_test:p2:b1",
+        ],
     )
     enriched_blocks = [
         EnrichedBlock(id=b.id, section_id=section1.id, heading_path=["Section 1"])
-        for p in doc.pages for b in p.blocks
+        for p in doc.pages
+        for b in p.blocks
     ]
     return EnrichedDocument(
         document_id=doc.id,
@@ -106,12 +127,12 @@ class TestSemanticSectionChunker:
         """Chunker should split large sections to respect max_tokens."""
         doc = _make_dummy_document()
         enriched = _make_dummy_enriched_doc(doc)
-        
+
         # Max 900 tokens. 400 words is ~520 tokens.
         # Two 400 word blocks should be split across two chunks.
         chunker = SemanticSectionChunker(target_tokens=600, max_tokens=900, overlap_tokens=50)
         chunks = chunker.chunk(enriched)
-        
+
         # Expecting at least 2 chunks for the 800 words + table + procedure
         assert len(chunks) >= 2
         for chunk in chunks:
@@ -124,10 +145,10 @@ class TestSemanticSectionChunker:
         """Procedure steps should not be split."""
         doc = _make_dummy_document()
         enriched = _make_dummy_enriched_doc(doc)
-        
+
         chunker = SemanticSectionChunker(target_tokens=600, max_tokens=900, overlap_tokens=0)
         chunks = chunker.chunk(enriched)
-        
+
         # Find the chunk containing the procedure
         proc_chunk = next(c for c in chunks if "Step 1" in c.text)
         assert "Step 1" in proc_chunk.text
@@ -138,10 +159,10 @@ class TestSemanticSectionChunker:
         """Tables should be represented as markdown in the chunk text."""
         doc = _make_dummy_document()
         enriched = _make_dummy_enriched_doc(doc)
-        
+
         chunker = SemanticSectionChunker(target_tokens=600, max_tokens=900, overlap_tokens=0)
         chunks = chunker.chunk(enriched)
-        
+
         table_chunk = next(c for c in chunks if "|" in c.text)
         assert "A" in table_chunk.text
         assert "---" in table_chunk.text
@@ -151,10 +172,10 @@ class TestSemanticSectionChunker:
         """Chunks should overlap if overlapping is enabled."""
         doc = _make_dummy_document()
         enriched = _make_dummy_enriched_doc(doc)
-        
+
         chunker = SemanticSectionChunker(target_tokens=600, max_tokens=900, overlap_tokens=600)
         chunks = chunker.chunk(enriched)
-        
+
         if len(chunks) > 1:
             # Check if there is common text between consecutive chunks
             text1_words = set(chunks[0].text.split())

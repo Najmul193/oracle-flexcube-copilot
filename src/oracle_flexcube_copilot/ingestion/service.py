@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -217,7 +217,7 @@ class DocumentIngestionService:
             A serializable dictionary with ingestion metadata and document entries.
         """
         return {
-            "ingestion_timestamp": datetime.now(timezone.utc).isoformat(),
+            "ingestion_timestamp": datetime.now(UTC).isoformat(),
             "total_documents": len(documents),
             "total_pages": sum(d.metadata.page_count for d in documents),
             "documents": [

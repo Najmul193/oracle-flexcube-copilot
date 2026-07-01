@@ -10,6 +10,6 @@ def test_placeholder() -> None:
 
 def test_imports() -> None:
     """Verify that core modules can be imported."""
-    from oracle_flexcube_copilot import __version__  # noqa: F811
+    from oracle_flexcube_copilot import __version__
 
     assert __version__ == "0.1.0"

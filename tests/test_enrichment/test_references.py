@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 from oracle_flexcube_copilot.enrichment.references import (
     extract_cross_references,
     extract_entity_references,
@@ -38,7 +40,13 @@ class TestExtractReferences:
         for ref in refs:
             assert ref.text != ""
             assert ref.target != ""
-            assert ref.reference_type in ("cross_ref", "entity_ref", "appendix_ref", "table_ref", "figure_ref")
+            assert ref.reference_type in (
+                "cross_ref",
+                "entity_ref",
+                "appendix_ref",
+                "table_ref",
+                "figure_ref",
+            )
             assert ref.source_block_id != ""
             assert ref.source_page is not None
 
@@ -69,38 +77,82 @@ class TestExtractReferences:
 
     def test_empty_document_no_references(self) -> None:
         """A document with no text should produce no references."""
-        from oracle_flexcube_copilot.ingestion.models import Block, Document, DocumentMetadata, Page, Paragraph
-        from datetime import datetime, timezone
+        from datetime import datetime
+
+        from oracle_flexcube_copilot.ingestion.models import (
+            Block,
+            Document,
+            DocumentMetadata,
+            Page,
+            Paragraph,
+        )
+
         doc = Document(
-            id="empty", filename="empty.pdf", absolute_path="/tmp/empty.pdf",
-            sha256="empty", file_size_bytes=0,
-            last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
-            created_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            id="empty",
+            filename="empty.pdf",
+            absolute_path="/tmp/empty.pdf",
+            sha256="empty",
+            file_size_bytes=0,
+            last_modified=datetime(2024, 1, 1, tzinfo=UTC),
+            created_time=datetime(2024, 1, 1, tzinfo=UTC),
             metadata=DocumentMetadata(page_count=1),
-            pages=[Page(id="empty:p1", page_number=1, blocks=[
-                Block(id="empty:p1:b0", type="text", block_index=0, paragraphs=[
-                    Paragraph(text="Simple text with no references.", index=0),
-                ]),
-            ])],
+            pages=[
+                Page(
+                    id="empty:p1",
+                    page_number=1,
+                    blocks=[
+                        Block(
+                            id="empty:p1:b0",
+                            type="text",
+                            block_index=0,
+                            paragraphs=[
+                                Paragraph(text="Simple text with no references.", index=0),
+                            ],
+                        ),
+                    ],
+                )
+            ],
         )
         refs = extract_references(doc)
         assert isinstance(refs, list)
 
     def test_appendix_reference_detected(self) -> None:
         """Should detect 'Appendix A' references."""
-        from oracle_flexcube_copilot.ingestion.models import Block, Document, DocumentMetadata, Page, Paragraph
-        from datetime import datetime, timezone
+        from datetime import datetime
+
+        from oracle_flexcube_copilot.ingestion.models import (
+            Block,
+            Document,
+            DocumentMetadata,
+            Page,
+            Paragraph,
+        )
+
         doc = Document(
-            id="appx", filename="appx.pdf", absolute_path="/tmp/appx.pdf",
-            sha256="appx", file_size_bytes=0,
-            last_modified=datetime(2024, 1, 1, tzinfo=timezone.utc),
-            created_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            id="appx",
+            filename="appx.pdf",
+            absolute_path="/tmp/appx.pdf",
+            sha256="appx",
+            file_size_bytes=0,
+            last_modified=datetime(2024, 1, 1, tzinfo=UTC),
+            created_time=datetime(2024, 1, 1, tzinfo=UTC),
             metadata=DocumentMetadata(page_count=1),
-            pages=[Page(id="appx:p1", page_number=1, blocks=[
-                Block(id="appx:p1:b0", type="text", block_index=0, paragraphs=[
-                    Paragraph(text="Refer to Appendix A for more details.", index=0),
-                ]),
-            ])],
+            pages=[
+                Page(
+                    id="appx:p1",
+                    page_number=1,
+                    blocks=[
+                        Block(
+                            id="appx:p1:b0",
+                            type="text",
+                            block_index=0,
+                            paragraphs=[
+                                Paragraph(text="Refer to Appendix A for more details.", index=0),
+                            ],
+                        ),
+                    ],
+                )
+            ],
         )
         refs = extract_references(doc)
         appendix_refs = [r for r in refs if r.reference_type == "appendix_ref"]

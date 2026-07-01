@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from oracle_flexcube_copilot.ingestion.models import Document, TOCEntry
 

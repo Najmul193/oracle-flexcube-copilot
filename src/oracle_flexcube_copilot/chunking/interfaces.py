@@ -11,7 +11,7 @@ from oracle_flexcube_copilot.enrichment.models import EnrichedDocument
 @runtime_checkable
 class Chunker(Protocol):
     """Interface for chunking strategies.
-    
+
     Transforms an EnrichedDocument into a list of Chunks.
     """
 

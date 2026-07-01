@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Generator
 
 import fitz
 
@@ -75,5 +74,5 @@ def load_pdf_safe(path: Path) -> fitz.Document | None:
     """
     try:
         return load_pdf(path)
-    except (PDFNotFoundError, InvalidPDFError, CorruptedPDFError, EmptyPDFError, EncryptedPDFError):
+    except PDFNotFoundError, InvalidPDFError, CorruptedPDFError, EmptyPDFError, EncryptedPDFError:
         return None

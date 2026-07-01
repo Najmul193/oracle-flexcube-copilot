@@ -14,8 +14,8 @@ logger = logging.getLogger("oracle_flexcube_copilot.enrichment.tables")
 # Heuristic: if a block's text lines contain consistent delimiters, it's likely a table
 TABLE_DELIMITER_PATTERNS = [
     re.compile(r"\s{2,}"),  # Two or more spaces
-    re.compile(r"\t"),       # Tabs
-    re.compile(r"\|"),       # Pipe
+    re.compile(r"\t"),  # Tabs
+    re.compile(r"\|"),  # Pipe
 ]
 
 
@@ -49,9 +49,9 @@ def extract_tables(document: Document) -> list[TableData]:
                             headers=block.table.headers,
                             rows=block.table.rows,
                             num_rows=len(block.table.rows),
-                            num_cols=len(block.table.headers) if block.table.headers else (
-                                len(block.table.rows[0]) if block.table.rows else 0
-                            ),
+                            num_cols=len(block.table.headers)
+                            if block.table.headers
+                            else (len(block.table.rows[0]) if block.table.rows else 0),
                         )
                     )
             elif block.type == "text":
@@ -119,7 +119,8 @@ def _is_likely_table(lines: list[str], delimiter: re.Pattern) -> bool:
         return False
 
     # Check if most lines have the same number of columns
-    from statistics import mode, StatisticsError
+    from statistics import StatisticsError, mode
+
     try:
         most_common = mode(col_counts)
         consistent = sum(1 for c in col_counts if c == most_common)

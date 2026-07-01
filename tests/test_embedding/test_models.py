@@ -29,7 +29,7 @@ class TestEmbeddingModels:
             embedding_model="test-model",
             embedding_dimension=3,
             embedding_time=0.5,
-            embedding_version="v1"
+            embedding_version="v1",
         )
         assert embedded.embedding == [0.1, 0.2, 0.3]
         assert embedded.embedding_dimension == 3

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import mimetypes
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -55,7 +55,7 @@ def get_last_modified(path: Path) -> datetime:
         A UTC timezone-aware datetime.
     """
     mtime = path.stat().st_mtime
-    return datetime.fromtimestamp(mtime, tz=timezone.utc)
+    return datetime.fromtimestamp(mtime, tz=UTC)
 
 
 def get_creation_time(path: Path) -> datetime:
@@ -73,7 +73,7 @@ def get_creation_time(path: Path) -> datetime:
     stat = path.stat()
     # st_birthtime is available on macOS/BSD
     ctime = getattr(stat, "st_birthtime", stat.st_ctime)
-    return datetime.fromtimestamp(ctime, tz=timezone.utc)
+    return datetime.fromtimestamp(ctime, tz=UTC)
 
 
 def get_mime_type(path: Path) -> str:

@@ -10,8 +10,9 @@ Produces a hierarchical representation:
 from __future__ import annotations
 
 import logging
+from collections.abc import Generator
 from datetime import datetime
-from typing import Any, Generator
+from typing import Any
 
 import fitz
 
@@ -19,13 +20,9 @@ from oracle_flexcube_copilot.exceptions import PDFProcessingError
 from oracle_flexcube_copilot.ingestion.models import (
     Block,
     DocumentMetadata,
-    ImageInfo,
     Page,
     Paragraph,
     TOCEntry,
-    TableData,
-    make_block_id,
-    make_page_id,
 )
 
 logger = logging.getLogger("oracle_flexcube_copilot.ingestion.parser")
@@ -84,7 +81,7 @@ def parse_document_metadata(doc: fitz.Document) -> DocumentMetadata:
     )
 
 
-def parse_pages(doc: fitz.Document) -> Generator[Page, None, None]:
+def parse_pages(doc: fitz.Document) -> Generator[Page]:
     """Yield ``Page`` objects for every page in the document.
 
     Each page is parsed into structural blocks (headings, text) and paragraphs.
@@ -114,9 +111,7 @@ def parse_pages(doc: fitz.Document) -> Generator[Page, None, None]:
                 character_count=character_count,
             )
         except Exception as e:
-            raise PDFProcessingError(
-                f"Failed to parse page {page_number + 1}: {e}"
-            ) from e
+            raise PDFProcessingError(f"Failed to parse page {page_number + 1}: {e}") from e
 
 
 def _parse_page_blocks(page: fitz.Page) -> list[Block]:
@@ -163,9 +158,7 @@ def _parse_page_blocks(page: fitz.Page) -> list[Block]:
     return result
 
 
-def _build_text_block(
-    fb: dict[str, Any], median_font: float, block_index: int
-) -> Block | None:
+def _build_text_block(fb: dict[str, Any], median_font: float, block_index: int) -> Block | None:
     """Build a ``Block`` from a PyMuPDF text block dictionary.
 
     Joins lines into paragraphs and detects heading status based on
@@ -205,7 +198,10 @@ def _build_text_block(
         return None
 
     # Heuristic: if the first or max font is significantly larger than median → heading
-    is_heading = max_font >= median_font * HEADING_FONT_THRESHOLD or first_font >= median_font * HEADING_FONT_THRESHOLD
+    is_heading = (
+        max_font >= median_font * HEADING_FONT_THRESHOLD
+        or first_font >= median_font * HEADING_FONT_THRESHOLD
+    )
     # Also check if text looks like a heading (short, no sentence-ending punctuation)
     looks_like_heading = (
         len(paragraph_text.strip()) < 200
@@ -308,8 +304,8 @@ def _parse_pdf_date(date_str: str | None) -> datetime | None:
             # Strip timezone info — store as naive UTC for simplicity
             cleaned = cleaned[:14]
 
-        return datetime.strptime(cleaned, fmt)  # noqa: DTZ007
-    except (ValueError, IndexError):
+        return datetime.strptime(cleaned, fmt)
+    except ValueError, IndexError:
         logger.warning("Failed to parse PDF date string: %s", date_str)
         return None
 

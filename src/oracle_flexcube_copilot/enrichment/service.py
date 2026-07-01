@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
 
+from oracle_flexcube_copilot.enrichment.classification import (
+    classify_document,
+    extract_oracle_entities,
+)
 from oracle_flexcube_copilot.enrichment.headings import (
     get_heading_path,
     heading_tree_to_flat,
@@ -16,13 +19,7 @@ from oracle_flexcube_copilot.enrichment.models import (
     EnrichedBlock,
     EnrichedDocument,
     HeadingNode,
-    Reference,
     Section,
-    TableData,
-)
-from oracle_flexcube_copilot.enrichment.classification import (
-    classify_document,
-    extract_oracle_entities,
 )
 from oracle_flexcube_copilot.enrichment.references import extract_references
 from oracle_flexcube_copilot.enrichment.tables import extract_tables
