@@ -1,7 +1,6 @@
-# oracle-flexcube-copilot
 # Oracle FLEXCUBE Copilot
 
-A RAG (Retrieval-Augmented Generation) copilot for Oracle FLEXCUBE documentation, powered by Qwen3:8B via Ollama and ChromaDB.
+RAG-powered assistant for Oracle FLEXCUBE documentation. Uses hybrid retrieval (vector + BM25 + entity + RRF) over 179 Oracle PDFs to answer questions via Qwen3:8B (Ollama).
 
 ## Architecture
 
@@ -9,61 +8,75 @@ A RAG (Retrieval-Augmented Generation) copilot for Oracle FLEXCUBE documentation
 Oracle PDFs (179)
        │
        ▼
-  ChromaDB (vector) ◄──► BM25 (keyword) ◄──► Entity Index (regex)
-       │                      │                       │
-       └──────────────────────┴───────────────────────┘
-                              │
-                              ▼
-                     RRF Fusion (reciprocal rank)
-                              │
-                              ▼
-                       Prompt Builder
-                              │
-                              ▼
-                      Qwen3:8B (Ollama)
-                              │
-                              ▼
-                     Answer + Citations
+  ┌──────────────────────────────────────────┐
+  │  Ingestion Pipeline                      │
+  │  ┌─────────┐ ┌──────────┐ ┌───────────┐ │
+  │  │ Extract │→│ Enrich   │→│ Chunk     │ │
+  │  │ (pdfpl  │ │ (headings│ │ (semantic │ │
+  │  │  umber) │ │ entities)│ │  sections)│ │
+  │  └─────────┘ └──────────┘ └───────────┘ │
+  └──────────────────────────────────────────┘
+       │
+       ▼
+  ┌─────────────────────────────────────────────┐
+  │  Index Layer                                │
+  │  ┌──────────┐  ┌──────────┐  ┌───────────┐ │
+  │  │ ChromaDB │  │   BM25   │  │  Entity   │ │
+  │  │ (dense)  │  │ (sparse) │  │  (SQLite) │ │
+  │  └──────────┘  └──────────┘  └───────────┘ │
+  └─────────────────────────────────────────────┘
+       │              │              │
+       └──────────────┴──────────────┘
+                      │
+                      ▼
+           RRF Fusion (k=60)
+                      │
+                      ▼
+             ┌────────────────┐
+             │  Prompt Builder │
+             │  (XML context)  │
+             └────────────────┘
+                      │
+                      ▼
+             ┌────────────────┐
+             │  Qwen3:8B      │
+             │  (Ollama)      │
+             └────────────────┘
+                      │
+                      ▼
+             Answer + Citations + Confidence
 ```
 
 ## Prerequisites
 
-- Python 3.12+
-- [Ollama](https://ollama.ai/) with `qwen3:8b` and `nomic-embed-text` models
-- `uv` (recommended) or `pip`
-
-## Setup
-
-```bash
-# Clone and enter the project
-cd oracle-flexcube-copilot
-
-# Create virtual environment with uv
-uv venv
-source .venv/bin/activate
-
-# Install dependencies
-uv sync
-
-# Or with pip
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-```
+- **Python 3.14+**
+- **Ollama** with `qwen3:8b` and `nomic-embed-text`
+- ~8 GB RAM (for LLM + vector store)
 
 ## Quick Start
 
 ```bash
-# Ingest PDFs into the vector store
-oracle-copilot ingest --data-dir data/
+# Create and activate virtual environment
+python3 -m venv .venv && source .venv/bin/activate
 
-# Ask a question (default: concise mode, streaming)
+# Install
+pip install -e ".[dev]"
+
+# Ingest PDFs (from docs/)
+oracle-copilot ingest docs/
+
+# Ask a question (CLI)
 oracle-copilot ask "How do I configure CASA interest rates?"
+
+# Or launch the UI
+oracle-copilot-ui     # --or--
+make ui               # --or--
+streamlit run src/oracle_flexcube_copilot/ui/app.py
 ```
 
-## CLI Commands
+## CLI Reference
 
-### `ask` — Ask questions about Oracle FLEXCUBE
+### `ask` — Question answering
 
 ```bash
 oracle-copilot ask "How do I maintain GL Balance Transfer?"
@@ -71,99 +84,149 @@ oracle-copilot ask "How do I maintain GL Balance Transfer?"
 # Answer modes
 oracle-copilot ask "question" --mode concise      # 2-5 sentences (default)
 oracle-copilot ask "question" --mode detailed      # Full step-by-step
-oracle-copilot ask "question" --mode expert        # Technical + cross-references
+oracle-copilot ask "question" --mode expert        # Technical + cross-refs
 
 # Streaming
-oracle-copilot ask "question" --stream             # Real-time token streaming (default)
+oracle-copilot ask "question" --stream             # Token streaming (default)
 oracle-copilot ask "question" --no-stream          # Wait for full answer
 
-# Minimum confidence threshold
-oracle-copilot ask "question" --min-score 0.6      # Only answer if confidence >= 60%
+# Confidence filter
+oracle-copilot ask "question" --min-score 0.5      # Minimum relevance threshold
 ```
 
-**Answer modes:**
 | Mode | Description |
 |------|-------------|
-| `concise` | 2-5 sentence summary with key points and screen codes |
-| `detailed` | Step-by-step instructions with all navigation details |
-| `expert` | Technical deep-dive with cross-references, accounting entries, and batch processes |
+| `concise` | 2-5 sentence summary with key points |
+| `detailed` | Step-by-step instructions with navigation |
+| `expert` | Technical deep-dive with cross-references |
 
-### `ingest` — Index PDF documents
+### `ingest` — Index documents
 
 ```bash
-oracle-copilot ingest --data-dir data/    # Index all PDFs in directory
-oracle-copilot ingest --file doc.pdf      # Index a single PDF
+oracle-copilot ingest path/to/pdf/directory/
 ```
 
-### `benchmark` — Evaluate retrieval quality
+Runs: PDF extraction → enrichment (headings, entities, tables) → semantic chunking → embedding → ChromaDB + BM25 index build.
+
+### `prompt` — Inspect the assembled prompt
+
+```bash
+oracle-copilot prompt "How do I configure CASA?" --show-context --show-system
+```
+
+Builds and displays the full prompt sent to the LLM — useful for debugging (no LLM call).
+
+### `search` — Pure retrieval
+
+```bash
+oracle-copilot search "interest rate configuration" --top-k 10
+```
+
+Returns raw fused results without LLM generation.
+
+### `benchmark` — Evaluation
 
 ```bash
 oracle-copilot benchmark benchmark_dataset.yaml --top-k 10
 ```
 
-Evaluates Hit@k, Recall@k, MRR, and NDCG@k against a YAML dataset of Q&A pairs.
+Measures Hit@k, Recall@k, MRR, NDCG@k.
 
-## LLM Configuration
+### `stats` — System health
 
-Set via environment variables or `config.toml`:
+```bash
+oracle-copilot stats
+```
+
+## User Interface
+
+A Streamlit web UI provides the same features with a chat interface:
+
+```bash
+make ui
+# opens at http://localhost:8501
+```
+
+**Features:**
+- Chat interface with message history
+- Streaming token display
+- Mode selector (concise / detailed / expert)
+- Top-K slider, Min Score filter
+- Per-answer Sources & Metrics expander (citations, confidence, timing, tokens)
+- "Clear Chat" button
+
+## Configuration
+
+All settings via environment variables or `.env` file:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server URL |
-| `OLLAMA_MODEL` | `qwen3:8b` | Model name |
-| `LLM_TEMPERATURE` | `0.1` | Response creativity |
+| `EMBEDDING_MODEL` | `nomic-embed-text` | Embedding model |
+| `LLM_MODEL` | `qwen3:8b` | Generation model |
+| `LLM_TEMPERATURE` | `0.1` | Sampling temperature |
 | `LLM_TOP_P` | `0.9` | Nucleus sampling |
-| `LLM_MAX_TOKENS` | `1024` | Max response tokens |
-| `LLM_CONTEXT_LENGTH` | `8192` | Context window size |
-| `LLM_TIMEOUT` | `120` | Request timeout (seconds) |
+| `LLM_REPEAT_PENALTY` | `1.1` | Token repeat penalty |
+| `LLM_NUM_CTX` | `8192` | Context window size |
+| `LLM_MAX_TOKENS` | `2048` | Max response tokens |
+| `LLM_TIMEOUT` | `120` | Request timeout (s) |
+| `CHUNK_SIZE` | `800` | Chunk token target |
+| `CHUNK_OVERLAP` | `100` | Chunk overlap tokens |
+| `TOP_K_RETRIEVAL` | `5` | Default top-K |
+| `RETRIEVAL_ALPHA` | `0.5` | Dense/sparse balance |
+| `PROMPT_MAX_TOKENS` | `4096` | Max prompt budget |
+| `PROMPT_MIN_SCORE` | `0.0` | Min retrieval score |
+| `LOG_LEVEL` | `INFO` | Logging level |
+| `LOG_FORMAT` | `text` | `text` or `json` |
 
 ## Development
 
 ```bash
-# Lint
-make lint
-
-# Type check
-make typecheck
-
-# Run tests
-make test
+make install       # Install dependencies
+make lint          # Ruff check + format
+make typecheck     # mypy
+make test          # pytest + coverage
+make test-cov      # pytest with coverage report
+make clean         # Remove artifacts
 ```
 
-## Project Structure
+### Project structure
 
 ```
-oracle-flexcube-copilot/
-├── src/oracle_flexcube_copilot/
-│   ├── __init__.py
-│   ├── cli.py              # CLI entry point (ask, ingest, benchmark)
-│   ├── config.py            # Configuration management
-│   ├── logger.py            # Logging setup
-│   ├── ingestion/           # PDF ingestion pipeline
-│   │   ├── parser.py        # PDF text extraction
-│   │   ├── chunker.py       # Semantic chunking with headings
-│   │   └── service.py       # Orchestration
-│   ├── indexing/            # Vector store & BM25
-│   │   ├── chroma.py        # ChromaDB integration
-│   │   └── bm25.py          # BM25 keyword index
-│   ├── retrieval/           # Hybrid retrieval
-│   │   ├── fusion.py        # RRF fusion
-│   │   └── entity.py        # Oracle entity extraction
-│   ├── prompting/           # Prompt building
-│   │   └── builder.py       # RAG prompt construction
-│   ├── evaluation/          # Benchmark pipeline
-│   │   ├── benchmark.py     # Batch evaluator
-│   │   └── metrics.py       # Hit@k, NDCG@k, MRR
-│   └── llm/                 # LLM interaction layer
-│       ├── client.py        # Ollama API client (retry, streaming)
-│       ├── generator.py     # RAG answer generation (3 modes)
-│       ├── formatter.py     # Console output formatting
-│       ├── stream.py        # Token stream tracking
-│       ├── models.py        # Config & response models
-│       └── exceptions.py    # Error classification
-├── data/                    # PDF files
-├── chroma_db/               # Vector store persistence
-├── cache/                   # Cached embeddings
-├── logs/                    # Application logs
-├── docs/                    # Documentation
-└── tests/                   # Test suite
+src/oracle_flexcube_copilot/
+├── __init__.py
+├── cli.py                 # CLI entry point (click)
+├── config.py              # Pydantic settings
+├── exceptions.py          # Shared exceptions
+├── logger.py              # Logging config
+├── chunking/              # Semantic section chunking
+├── embedding/             # nomic-embed-text via Ollama + caching
+├── enrichment/            # Headings, entities, tables, hierarchy extraction
+├── evaluation/            # Benchmark runner, metrics, reporting
+├── indexing/              # ChromaDB vector store, BM25, entity index
+├── ingestion/             # PDF parsing, metadata, loading
+├── llm/                   # Ollama client, RAG generator, formatter, streaming
+├── prompting/             # Prompt builder, XML context, system templates
+├── prompts/               # Alternative prompt strategies (legacy)
+├── retrieval/             # Vector, BM25, entity retrievers, RRF fusion
+└── ui/                    # Streamlit chat interface
+```
+
+### Adding evaluation
+
+```bash
+oracle-copilot benchmark my_dataset.yaml --top-k 15
+```
+
+Dataset format (YAML):
+
+```yaml
+queries:
+  - question: "How do I configure CASA?"
+    relevant_docs: ["CASA.pdf", "Interest.pdf"]
+    module: "CASA"
+```
+
+## License
+
+MIT
