@@ -33,6 +33,9 @@ dependencies = [
     "click>=8.1.0",
     "rich>=13.0.0",
 
+    # UI
+    "streamlit>=1.58.0",
+
     # Utilities
     "tqdm>=4.66.0",
     "pyyaml>=6.0.0",
@@ -49,6 +52,7 @@ dev = [
 
 [project.scripts]
 oracle-copilot = "oracle_flexcube_copilot.cli:main"
+oracle-copilot-ui = "oracle_flexcube_copilot.ui.app:main"
 
 [tool.ruff]
 target-version = "py314"

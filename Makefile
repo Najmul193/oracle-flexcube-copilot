@@ -1,4 +1,4 @@
-.PHONY: install lint typecheck test clean
+.PHONY: install lint typecheck test clean ui run
 
 install:
 	uv sync --dev
@@ -19,6 +19,12 @@ test:
 
 test-cov:
 	pytest --cov=src/oracle_flexcube_copilot --cov-report=term-missing
+
+ui:
+	streamlit run src/oracle_flexcube_copilot/ui/app.py
+
+run:
+	streamlit run src/oracle_flexcube_copilot/ui/app.py
 
 clean:
 	rm -rf .venv/
