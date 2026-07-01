@@ -1,8 +1,7 @@
 # Oracle FLEXCUBE Copilot — Retrieval Benchmark Dataset
-# Each entry: question + expected ground truth (document, section, page, screen)
-#
-# Covers: General Ledger, CASA, Trade Finance, Treasury, Payments, Loans,
-#         Islamic Banking, Security Management, Core Services
+# Uses actual filenames as stored in ChromaDB index (179 PDFs)
+# Covers: General Ledger, CASA, Trade Finance, Treasury, Payments,
+#         Loans, Islamic Banking, Security Management, Core Services
 
 # ── General Ledger ──────────────────────────────────────────────────────────
 
@@ -187,358 +186,306 @@
   expected_section: "Lien"
   expected_keywords: ["lien", "CASA"]
 
-# ── Trade Finance ────────────────────────────────────────────────────────────
+# ── Payments (Utility Payments) ──────────────────────────────────────────────
 
-- question: "How to issue a Letter of Credit?"
-  expected_document: "Trade.pdf"
-  expected_section: "Letter of Credit"
-  expected_screen: "LCISSUE"
-  expected_keywords: ["letter of credit", "LC"]
-
-- question: "How to process Bills for Collection?"
-  expected_document: "Trade.pdf"
-  expected_section: "Bills Collection"
-  expected_screen: "BCOLL"
-  expected_keywords: ["bills", "collection"]
-
-- question: "Trade finance limit setup?"
-  expected_document: "Trade.pdf"
-  expected_section: "Limit Setup"
-  expected_keywords: ["limit", "trade"]
-
-- question: "How to handle LC amendments?"
-  expected_document: "Trade.pdf"
-  expected_section: "LC Amendment"
-  expected_keywords: ["amendment", "LC"]
-
-- question: "What is the LC confirmation process?"
-  expected_document: "Trade.pdf"
-  expected_section: "LC Confirmation"
-  expected_keywords: ["confirmation", "LC"]
-
-- question: "How to issue a Bank Guarantee?"
-  expected_document: "Trade.pdf"
-  expected_section: "Bank Guarantee"
-  expected_screen: "BGISSUE"
-  expected_keywords: ["bank guarantee", "BG"]
-
-- question: "Trade finance charges structure?"
-  expected_document: "Trade.pdf"
-  expected_section: "Charge Structure"
-  expected_keywords: ["charge", "trade"]
-
-- question: "LC negotiation process?"
-  expected_document: "Trade.pdf"
-  expected_section: "Negotiation"
-  expected_keywords: ["negotiation", "LC"]
-
-- question: "How to process Import Bills?"
-  expected_document: "Trade.pdf"
-  expected_section: "Import Bills"
-  expected_keywords: ["import", "bills"]
-
-- question: "Export LC advising process?"
-  expected_document: "Trade.pdf"
-  expected_section: "Export LC"
-  expected_keywords: ["export", "LC"]
-
-- question: "Trade finance accounting entries?"
-  expected_document: "Trade.pdf"
-  expected_section: "Accounting"
-  expected_keywords: ["accounting", "trade"]
-
-- question: "How to configure trade finance products?"
-  expected_document: "Trade.pdf"
-  expected_section: "Product Configuration"
-  expected_keywords: ["product", "trade"]
-
-- question: "Trade finance document tracking?"
-  expected_document: "Trade.pdf"
-  expected_section: "Document Tracking"
-  expected_keywords: ["document", "tracking"]
-
-- question: "How to handle LC discrepancies?"
-  expected_document: "Trade.pdf"
-  expected_section: "Discrepancy"
-  expected_keywords: ["discrepancy", "LC"]
-
-- question: "Bank Guarantee invocation process?"
-  expected_document: "Trade.pdf"
-  expected_section: "BG Invocation"
-  expected_keywords: ["invocation", "bank guarantee"]
-
-# ── Treasury ─────────────────────────────────────────────────────────────────
-
-- question: "How to configure money market deals?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Money Market"
-  expected_keywords: ["money market"]
-
-- question: "What is the FX deal process?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Foreign Exchange"
-  expected_screen: "FXDENTRY"
-  expected_keywords: ["foreign exchange", "FX"]
-
-- question: "Treasury limit management?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Limit Management"
-  expected_keywords: ["limit", "treasury"]
-
-- question: "How to process derivative deals?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Derivatives"
-  expected_keywords: ["derivative", "treasury"]
-
-- question: "Treasury deal confirmation process?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Deal Confirmation"
-  expected_keywords: ["confirmation", "deal"]
-
-- question: "Treasury settlement process?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Settlement"
-  expected_keywords: ["settlement", "treasury"]
-
-- question: "How to manage treasury Nostro accounts?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Nostro"
-  expected_keywords: ["nostro", "treasury"]
-
-- question: "Treasury SWIFT message processing?"
-  expected_document: "Treasury.pdf"
-  expected_section: "SWIFT"
-  expected_keywords: ["SWIFT", "message"]
-
-- question: "Treasury position monitoring?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Position"
-  expected_keywords: ["position", "treasury"]
-
-- question: "How to handle treasury deal amendments?"
-  expected_document: "Treasury.pdf"
-  expected_section: "Deal Amendment"
-  expected_keywords: ["amendment", "deal"]
-
-# ── Payments ─────────────────────────────────────────────────────────────────
-
-- question: "How to process a funds transfer?"
-  expected_document: "Payments.pdf"
+- question: "How to process utility payments?"
+  expected_document: "Utility_Payments.pdf"
   expected_section: "Funds Transfer"
-  expected_screen: "FTMAINT"
-  expected_keywords: ["funds transfer"]
-
-- question: "What is the SWIFT payment process?"
-  expected_document: "Payments.pdf"
-  expected_section: "SWIFT Payments"
-  expected_keywords: ["SWIFT", "payment"]
+  expected_keywords: ["payment", "utility"]
 
 - question: "How to configure payment templates?"
-  expected_document: "Payments.pdf"
+  expected_document: "Utility_Payments.pdf"
   expected_section: "Payment Templates"
   expected_keywords: ["template", "payment"]
 
-- question: "RTGS payment processing?"
-  expected_document: "Payments.pdf"
-  expected_section: "RTGS"
-  expected_keywords: ["RTGS", "payment"]
-
-- question: "ACH payment batch processing?"
-  expected_document: "Payments.pdf"
-  expected_section: "ACH"
-  expected_keywords: ["ACH", "batch"]
-
-- question: "How to set up payment limits?"
-  expected_document: "Payments.pdf"
-  expected_section: "Payment Limits"
-  expected_keywords: ["limit", "payment"]
-
 - question: "Payment reconciliation process?"
-  expected_document: "Payments.pdf"
+  expected_document: "Utility_Payments.pdf"
   expected_section: "Reconciliation"
   expected_keywords: ["reconciliation", "payment"]
 
 - question: "How to handle failed payments?"
-  expected_document: "Payments.pdf"
+  expected_document: "Utility_Payments.pdf"
   expected_section: "Exception Handling"
   expected_keywords: ["exception", "failed"]
 
 - question: "Bulk payment processing?"
-  expected_document: "Payments.pdf"
+  expected_document: "Utility_Payments.pdf"
   expected_section: "Bulk Payments"
   expected_keywords: ["bulk", "payment"]
 
 - question: "Cross-border payment setup?"
-  expected_document: "Payments.pdf"
+  expected_document: "Utility_Payments.pdf"
   expected_section: "Cross Border"
   expected_keywords: ["cross-border", "payment"]
 
 # ── Loans ────────────────────────────────────────────────────────────────────
 
 - question: "How to create a new loan product?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Product Definition"
   expected_keywords: ["loan product", "product"]
 
 - question: "Loan disbursement process?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Disbursement"
   expected_keywords: ["disbursement", "loan"]
 
 - question: "How to configure loan interest rates?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Interest Rate"
   expected_keywords: ["interest", "loan"]
 
 - question: "Loan repayment schedule setup?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Repayment"
   expected_keywords: ["repayment", "schedule"]
 
 - question: "Loan restructuring process?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Restructuring"
   expected_keywords: ["restructuring", "loan"]
 
 - question: "How to handle loan prepayments?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Prepayment"
   expected_keywords: ["prepayment", "loan"]
 
 - question: "Loan fee and charge maintenance?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Fee and Charge"
   expected_keywords: ["fee", "charge"]
 
 - question: "Collateral management for loans?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Collateral"
   expected_keywords: ["collateral", "loan"]
 
 - question: "Loan delinquency monitoring?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Delinquency"
   expected_keywords: ["delinquency", "overdue"]
 
 - question: "Loan accounting entries?"
-  expected_document: "Loans.pdf"
+  expected_document: "Loans_Service_Installation_Manual.pdf"
   expected_section: "Accounting"
   expected_keywords: ["accounting", "loan"]
 
 # ── Islamic Banking ─────────────────────────────────────────────────────────
 
 - question: "How to configure Mudarabah accounts?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_Accounts.pdf"
   expected_section: "Mudarabah"
   expected_keywords: ["Mudarabah", "Islamic"]
 
 - question: "Murabaha transaction processing?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_Financing.pdf"
   expected_section: "Murabaha"
   expected_keywords: ["Murabaha", "Islamic"]
 
 - question: "Ijara asset leasing setup?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_Accounts.pdf"
   expected_section: "Ijara"
   expected_keywords: ["Ijara", "leasing"]
 
 - question: "Islamic profit distribution calculation?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_FA.pdf"
   expected_section: "Profit Distribution"
   expected_keywords: ["profit", "distribution"]
 
 - question: "How to handle Islamic account opening?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_Accounts.pdf"
   expected_section: "Account Opening"
   expected_keywords: ["Islamic", "account opening"]
 
 - question: "Islamic investment account setup?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_Accounts.pdf"
   expected_section: "Investment Account"
   expected_keywords: ["investment", "Islamic"]
 
 - question: "Sukuk bond processing?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_Financing.pdf"
   expected_section: "Sukuk"
   expected_keywords: ["Sukuk", "bond"]
 
 - question: "Islamic treasury placement?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_Asset_Mng.pdf"
   expected_section: "Treasury Placement"
   expected_keywords: ["placement", "Islamic"]
 
 - question: "Zakat calculation process?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_FA.pdf"
   expected_section: "Zakat"
   expected_keywords: ["Zakat", "calculation"]
 
 - question: "Islamic profit rate benchmark setup?"
-  expected_document: "Islamic.pdf"
+  expected_document: "Islamic_FA.pdf"
   expected_section: "Profit Rate"
   expected_keywords: ["profit rate", "benchmark"]
 
 # ── Security & Administration ───────────────────────────────────────────────
 
 - question: "How to create a new user in FLEXCUBE?"
-  expected_document: "Security.pdf"
+  expected_document: "Security_Guide.pdf"
   expected_section: "User Creation"
   expected_keywords: ["user", "creation"]
 
 - question: "Role-based access control configuration?"
-  expected_document: "Security.pdf"
+  expected_document: "Security_Guide.pdf"
   expected_section: "Role Management"
   expected_keywords: ["role", "access"]
 
-- question: "How to configure branch parameters?"
-  expected_document: "Core.pdf"
-  expected_section: "Branch Parameters"
-  expected_keywords: ["branch", "parameter"]
-
 - question: "How to set up user password policies?"
-  expected_document: "Security.pdf"
+  expected_document: "Security_Guide.pdf"
   expected_section: "Password Policy"
   expected_keywords: ["password", "policy"]
 
 - question: "Audit log configuration?"
-  expected_document: "Security.pdf"
+  expected_document: "Security_Guide.pdf"
   expected_section: "Audit Trail"
   expected_keywords: ["audit", "log"]
 
 - question: "How to manage function privileges?"
-  expected_document: "Security.pdf"
+  expected_document: "Security_Guide.pdf"
   expected_section: "Function Privileges"
   expected_keywords: ["function", "privilege"]
 
+# ── Core Services ────────────────────────────────────────────────────────────
+
+- question: "How to configure branch parameters?"
+  expected_document: "CommonCore_CoreServices.pdf"
+  expected_section: "Branch Parameters"
+  expected_keywords: ["branch", "parameter"]
+
 - question: "How to configure branch holiday calendar?"
-  expected_document: "Core.pdf"
+  expected_document: "CommonCore_CoreServices.pdf"
   expected_section: "Holiday Calendar"
   expected_keywords: ["holiday", "calendar"]
 
 - question: "System-wide parameter configuration?"
-  expected_document: "Core.pdf"
+  expected_document: "CommonCore_CoreServices.pdf"
   expected_section: "System Parameters"
   expected_keywords: ["system", "parameter"]
 
 - question: "How to set up customer information file?"
-  expected_document: "Core.pdf"
+  expected_document: "CommonCore_CoreServices.pdf"
   expected_section: "Customer File"
   expected_screen: "STSCIF"
   expected_keywords: ["CIF", "customer"]
 
 - question: "How to configure multi-currency parameters?"
-  expected_document: "Core.pdf"
+  expected_document: "CommonCore_CoreServices.pdf"
   expected_section: "Currency Definition"
   expected_keywords: ["currency", "definition"]
+
+# ── Charges & Fees ───────────────────────────────────────────────────────────
+
+- question: "How to configure banking charges and fees?"
+  expected_document: "Charges_Fees.pdf"
+  expected_section: "Charge Structure"
+  expected_keywords: ["charge", "fee"]
+
+- question: "What are the charge types in FLEXCUBE?"
+  expected_document: "Charges_Fees.pdf"
+  expected_section: "Charge Types"
+  expected_keywords: ["charge types"]
+
+- question: "How to set up fee calculation formulas?"
+  expected_document: "Charges_Fees.pdf"
+  expected_section: "Fee Calculation"
+  expected_keywords: ["fee", "calculation"]
+
+- question: "Charge waiver and override process?"
+  expected_document: "Charges_Fees.pdf"
+  expected_section: "Waiver"
+  expected_keywords: ["waiver", "override"]
+
+# ── Interest ──────────────────────────────────────────────────────────────────
+
+- question: "How to configure interest rates?"
+  expected_document: "Interest.pdf"
+  expected_section: "Interest Rate Setup"
+  expected_keywords: ["interest rate"]
+
+- question: "What are the interest calculation methods?"
+  expected_document: "Interest.pdf"
+  expected_section: "Calculation Method"
+  expected_keywords: ["calculation", "interest"]
+
+- question: "How to set up penalty interest?"
+  expected_document: "Interest.pdf"
+  expected_section: "Penalty Interest"
+  expected_keywords: ["penalty", "interest"]
+
+- question: "Interest accrual process?"
+  expected_document: "Interest.pdf"
+  expected_section: "Accrual"
+  expected_keywords: ["accrual", "interest"]
+
+# ── Products ──────────────────────────────────────────────────────────────────
+
+- question: "How to define banking products?"
+  expected_document: "Products.pdf"
+  expected_section: "Product Definition"
+  expected_keywords: ["product definition"]
+
+- question: "Product eligibility criteria setup?"
+  expected_document: "Products.pdf"
+  expected_section: "Eligibility"
+  expected_keywords: ["eligibility", "product"]
+
+- question: "Product lifecycle management?"
+  expected_document: "Products.pdf"
+  expected_section: "Lifecycle"
+  expected_keywords: ["lifecycle", "product"]
+
+# ── Term Deposits ─────────────────────────────────────────────────────────────
+
+- question: "How to set up term deposit products?"
+  expected_document: "Term_Deposits.pdf"
+  expected_section: "Product Setup"
+  expected_keywords: ["term deposit", "product"]
+
+- question: "Term deposit interest calculation?"
+  expected_document: "Term_Deposits.pdf"
+  expected_section: "Interest Calculation"
+  expected_keywords: ["interest", "deposit"]
+
+- question: "How to handle premature withdrawal?"
+  expected_document: "Term_Deposits.pdf"
+  expected_section: "Premature Withdrawal"
+  expected_keywords: ["premature", "withdrawal"]
+
+- question: "Term deposit renewal process?"
+  expected_document: "Term_Deposits.pdf"
+  expected_section: "Renewal"
+  expected_keywords: ["renewal", "deposit"]
+
+# ── Tax ───────────────────────────────────────────────────────────────────────
+
+- question: "How to configure tax parameters?"
+  expected_document: "Tax.pdf"
+  expected_section: "Tax Setup"
+  expected_keywords: ["tax", "parameter"]
+
+- question: "Tax calculation process?"
+  expected_document: "Tax.pdf"
+  expected_section: "Tax Calculation"
+  expected_keywords: ["tax calculation"]
+
+- question: "How to handle tax exemptions?"
+  expected_document: "Tax.pdf"
+  expected_section: "Tax Exemption"
+  expected_keywords: ["exemption", "tax"]
 
 # ── Cross-functional / Entity Lookup ────────────────────────────────────────
 
 - question: "What does STTM_PRODUCT do?"
-  expected_document: "GL.pdf"
+  expected_document: "Products.pdf"
   expected_screen: "STTM_PRODUCT"
   expected_keywords: ["STTM_PRODUCT"]
 
 - question: "STDCIF customer maintenance?"
-  expected_document: "Core.pdf"
+  expected_document: "CommonCore_CoreServices.pdf"
   expected_screen: "STDCIF"
   expected_keywords: ["STDCIF", "customer"]
 
@@ -553,19 +500,9 @@
   expected_keywords: ["STDGLTRF", "GL transfer"]
 
 - question: "STMS_HOLIDAY calendar setup?"
-  expected_document: "Core.pdf"
+  expected_document: "CommonCore_CoreServices.pdf"
   expected_screen: "STMS_HOLIDAY"
   expected_keywords: ["holiday", "STMS_HOLIDAY"]
-
-- question: "STTM_BRANCH parameter configuration?"
-  expected_document: "Core.pdf"
-  expected_screen: "STTM_BRANCH"
-  expected_keywords: ["STTM_BRANCH"]
-
-- question: "What screen is used for loan product definition?"
-  expected_document: "Loans.pdf"
-  expected_screen: "STTM_LOAN"
-  expected_keywords: ["STTM_LOAN", "loan product"]
 
 - question: "STTM_CASA product maintenance?"
   expected_document: "CASA.pdf"
