@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import time
 from typing import Any
 
@@ -21,6 +22,21 @@ from oracle_flexcube_copilot.prompting.models import ContextBlock, ContextConfig
 from oracle_flexcube_copilot.retrieval.bm25 import BM25Retriever
 from oracle_flexcube_copilot.retrieval.engine import VectorRetriever
 from oracle_flexcube_copilot.retrieval.fusion import RRFFuser
+
+# ── Live model monitoring ──────────────────────────────────────────────
+
+
+def _ollama_ps() -> str:
+    try:
+        result = subprocess.run(["ollama", "ps"], capture_output=True, text=True, timeout=5)
+        return result.stdout or result.stderr or "(no output)"
+    except FileNotFoundError:
+        return "Ollama not found"
+    except subprocess.TimeoutExpired:
+        return "ollama ps timed out"
+    except Exception as e:
+        return f"Error: {e}"
+
 
 st.set_page_config(
     page_title="Oracle FLEXCUBE Copilot",
@@ -158,8 +174,27 @@ with st.sidebar:
 
     st.divider()
 
+    # ── Debug Console ──────────────────────────────────────────────
+
+    with st.expander("🛠 Debug Console", expanded=False):
+        _ollama_ps_refresh = st.button("⟳ Refresh Ollama PS", use_container_width=True)
+        if _ollama_ps_refresh or "_ollama_ps_cache" not in st.session_state:
+            st.session_state["_ollama_ps_cache"] = _ollama_ps()
+        st.code(st.session_state["_ollama_ps_cache"], language="text")
+
+        st.markdown("**Live Model Activity**")
+        dbg = st.session_state.setdefault("_debug", {})
+        c1, c2 = st.columns(2)
+        dbg["speed_ph"] = c1.empty()
+        dbg["count_ph"] = c2.empty()
+        dbg["prompt_ph"] = st.empty()
+        dbg["retrieval_ph"] = st.empty()
+
+    st.divider()
+
     if st.button("Clear Chat", type="secondary", use_container_width=True):
         st.session_state.messages = []
+        st.session_state["_debug"] = {}
         st.rerun()
 
 
@@ -201,6 +236,15 @@ if prompt := st.chat_input("Ask about Oracle FLEXCUBE..."):
             results = pipeline["fuser"].fuse([vector_results, bm25_results], top_k=top_k)
             retrieval_time = time.perf_counter() - t0
 
+            # Debug: retrieval details
+            dbg = st.session_state.setdefault("_debug", {})
+            retrieval_lines = [f"**Top-{len(results)} chunks** (from vector + BM25)"]
+            for r in results:
+                retrieval_lines.append(
+                    f"- {r.source_document} p.{r.page}  `{r.score:.4f}`  [{r.retrieval_method}]"
+                )
+            dbg["retrieval_ph"].markdown("\n".join(retrieval_lines))
+
             if not results:
                 status_slot.update(state="error", label="No relevant docs found")
                 msg = "I couldn't find relevant documentation. Please rephrase your question."
@@ -217,15 +261,28 @@ if prompt := st.chat_input("Ask about Oracle FLEXCUBE..."):
             )
             prompt_req = pipeline["builder"].build(prompt, results, config=config)
 
+            # Debug: raw prompt preview
+            full_prompt = f"{prompt_req.formatted_context}\n\n{prompt_req.user_prompt}"
+            dbg["prompt_ph"].code(
+                full_prompt[:2000] + ("..." if len(full_prompt) > 2000 else ""),
+                language="xml",
+            )
+
             # 3. Generate
             if use_streaming:
                 handler = StreamHandler()
                 token_stream = pipeline["generator"].stream(prompt_req, mode=mode)
 
                 text = ""
+                gen_start = time.perf_counter()
                 for token in handler.handle(token_stream):
                     text += token
                     answer_slot.markdown(text + "▌")
+                    # Live token speed
+                    elapsed = time.perf_counter() - gen_start
+                    speed = handler.token_count / elapsed if elapsed > 0 else 0
+                    dbg["speed_ph"].metric("Speed", f"{speed:.1f} tok/s")
+                    dbg["count_ph"].metric("Tokens", str(handler.token_count))
                 answer_slot.markdown(text)
 
                 # Build AnswerResponse without a second LLM call
@@ -265,8 +322,14 @@ if prompt := st.chat_input("Ask about Oracle FLEXCUBE..."):
             else:
                 t1 = time.perf_counter()
                 answer = pipeline["generator"].generate(prompt_req, mode=mode)
+                elapsed = time.perf_counter() - t1
                 answer.metadata.retrieval_time = retrieval_time
-                answer.metadata.generation_time = time.perf_counter() - t1
+                answer.metadata.generation_time = elapsed
+
+                # Debug: non-streaming stats
+                speed = answer.metadata.completion_tokens / elapsed if elapsed > 0 else 0
+                dbg["speed_ph"].metric("Speed", f"{speed:.1f} tok/s")
+                dbg["count_ph"].metric("Tokens", str(answer.metadata.completion_tokens))
 
                 answer_slot.markdown(answer.answer)
 
