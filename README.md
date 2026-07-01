@@ -236,7 +236,3 @@ rag, llm, oracle-flexcube, python, information-retrieval, streamlit, ollama, chr
 ```
 
 ---
-
-## License
-
-MIT
