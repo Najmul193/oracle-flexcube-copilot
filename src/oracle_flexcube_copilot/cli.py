@@ -13,6 +13,8 @@ from oracle_flexcube_copilot.embedding.engine import EmbeddingEngine
 from oracle_flexcube_copilot.enrichment.service import DocumentEnrichmentService
 from oracle_flexcube_copilot.evaluation.benchmark import RetrievalEvaluator
 from oracle_flexcube_copilot.evaluation.dataset import load_dataset
+from oracle_flexcube_copilot.indexing.entity_index import OracleEntityIndex
+from oracle_flexcube_copilot.retrieval.entity import EntityRetriever
 from oracle_flexcube_copilot.evaluation.report import generate_markdown_report
 from oracle_flexcube_copilot.indexing.entity_index import OracleEntityIndex
 from oracle_flexcube_copilot.indexing.indexer import ChromaIndexer
@@ -141,12 +143,15 @@ def prompt(
     embedder = EmbeddingEngine(cache=cache)
     vector_retriever = VectorRetriever(embedder=embedder, indexer=indexer)
     bm25_retriever = BM25Retriever()
+    entity_index = OracleEntityIndex()
+    entity_retriever = EntityRetriever(entity_index=entity_index, indexer=indexer)
     fuser = RRFFuser()
 
     with console.status("[bold yellow]Searching documentation...[/bold yellow]"):
         vector_results = vector_retriever.retrieve(query, top_k=top_k)
         bm25_results = bm25_retriever.retrieve(query, top_k=top_k)
-        results = fuser.fuse([vector_results, bm25_results], top_k=top_k)
+        entity_results = entity_retriever.retrieve(query, top_k=top_k)
+        results = fuser.fuse([vector_results, bm25_results, entity_results], top_k=top_k)
 
     config = ContextConfig(
         max_tokens=max_tokens or settings.prompt_max_tokens,

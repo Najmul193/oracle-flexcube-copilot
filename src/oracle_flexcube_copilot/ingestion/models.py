@@ -96,6 +96,10 @@ class Block(BaseModel):
     id: str = Field(
         default_factory=_temp_id, description="Stable block ID: doc_sha256:p{page}:b{block}"
     )
+    page_number: int = Field(
+        default=0,
+        description="One-based page number this block belongs to (populated during parsing)",
+    )
     type: str = Field(description="Block type: heading, text, list, table, figure, etc.")
     level: int | None = Field(
         default=None, description="Heading level (1-6) if type is heading, else None"

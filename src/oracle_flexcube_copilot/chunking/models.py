@@ -31,6 +31,7 @@ class Chunk(BaseModel):
     # Hierarchical context
     heading_path: list[str] = Field(default_factory=list, description="Hierarchical heading path")
     section_title: str = Field(default="", description="Immediate section title")
+    section_id: str = Field(default="", description="Stable section identifier")
 
     # Page range
     page_start: int = Field(default=0, description="Start page number")

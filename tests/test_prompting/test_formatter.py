@@ -366,3 +366,117 @@ def test_min_score_with_budget() -> None:
     assert len(blocks) == 2
     assert blocks[0].chunk_id == "b"
     assert blocks[1].chunk_id == "c"
+
+
+# -- Hierarchical merge tests --
+
+
+def test_extract_section_num_numeric() -> None:
+    assert DefaultContextFormatter._extract_section_num("7 Maintaining GL") == (7,)
+    assert DefaultContextFormatter._extract_section_num("7.1 GL Transfer") == (7, 1)
+    assert DefaultContextFormatter._extract_section_num("7.1.1 Details") == (7, 1, 1)
+
+
+def test_extract_section_num_no_match() -> None:
+    assert DefaultContextFormatter._extract_section_num("Introduction") == ()
+
+
+def test_is_hierarchical_child_direct() -> None:
+    assert DefaultContextFormatter._is_hierarchical_child((7,), (7, 1)) is True
+
+
+def test_is_hierarchical_child_grandchild() -> None:
+    assert DefaultContextFormatter._is_hierarchical_child((7,), (7, 1, 1)) is True
+
+
+def test_is_hierarchical_child_sibling_not() -> None:
+    assert DefaultContextFormatter._is_hierarchical_child((7, 1), (7, 2)) is False
+
+
+def test_is_hierarchical_child_same_level_not() -> None:
+    assert DefaultContextFormatter._is_hierarchical_child((7,), (8,)) is False
+
+
+def test_is_hierarchical_child_empty_not() -> None:
+    assert DefaultContextFormatter._is_hierarchical_child((), (7,)) is False
+    assert DefaultContextFormatter._is_hierarchical_child((7,), ()) is False
+
+
+def test_merge_hierarchical_parent_child() -> None:
+    fmt = DefaultContextFormatter()
+    chunks = [
+        _make_chunk("a", doc="GL.pdf", page=44, heading="7 Maintaining GL Balance Transfer", text="Parent content.", score=0.9),
+        _make_chunk("b", doc="GL.pdf", page=44, heading="7.1 GL Balance Transfer Maintenance", text="Child content.", score=0.8),
+    ]
+    _xml, blocks, _citations = fmt.format(chunks)
+    assert len(blocks) == 1
+    assert "Parent content." in blocks[0].text
+    assert "Child content." in blocks[0].text
+    assert blocks[0].section == "7 Maintaining GL Balance Transfer"
+
+
+def test_merge_hierarchical_chain() -> None:
+    fmt = DefaultContextFormatter()
+    chunks = [
+        _make_chunk("a", doc="GL.pdf", page=44, heading="7 Maintaining GL", text="Level 1.", score=0.9),
+        _make_chunk("b", doc="GL.pdf", page=44, heading="7.1 GL Transfer", text="Level 2.", score=0.8),
+        _make_chunk("c", doc="GL.pdf", page=45, heading="7.1.1 Details", text="Level 3.", score=0.7),
+    ]
+    _xml, blocks, _citations = fmt.format(chunks)
+    assert len(blocks) == 1
+    assert "Level 1." in blocks[0].text
+    assert "Level 2." in blocks[0].text
+    assert "Level 3." in blocks[0].text
+    assert blocks[0].section == "7 Maintaining GL"
+
+
+def test_merge_hierarchical_different_document_no_merge() -> None:
+    fmt = DefaultContextFormatter()
+    chunks = [
+        _make_chunk("a", doc="GL.pdf", page=44, heading="7 Maintaining GL", text="A"),
+        _make_chunk("b", doc="CASA.pdf", page=10, heading="7.1 Config", text="B"),
+    ]
+    _xml, blocks, _citations = fmt.format(chunks)
+    assert len(blocks) == 2
+
+
+def test_merge_hierarchical_non_numeric_heading_no_merge() -> None:
+    fmt = DefaultContextFormatter()
+    chunks = [
+        _make_chunk("a", doc="GL.pdf", page=44, heading="Introduction", text="A"),
+        _make_chunk("b", doc="GL.pdf", page=45, heading="Overview", text="B"),
+    ]
+    _xml, blocks, _citations = fmt.format(chunks)
+    assert len(blocks) == 2
+
+
+def test_merge_hierarchical_different_branch_no_merge() -> None:
+    fmt = DefaultContextFormatter()
+    chunks = [
+        _make_chunk("a", doc="GL.pdf", page=44, heading="7 GL Transfer", text="A"),
+        _make_chunk("b", doc="GL.pdf", page=45, heading="8 Config", text="B"),
+    ]
+    _xml, blocks, _citations = fmt.format(chunks)
+    assert len(blocks) == 2
+
+
+def test_merge_hierarchical_with_adjacent_merge() -> None:
+    """Hierarchical merge works after adjacent same-heading merge."""
+    fmt = DefaultContextFormatter()
+    chunks = [
+        _make_chunk("a", doc="GL.pdf", page=10, heading="7 GL Transfer", text="Part1", score=0.9),
+        _make_chunk("b", doc="GL.pdf", page=11, heading="7 GL Transfer", text="Part2", score=0.8),
+        _make_chunk("c", doc="GL.pdf", page=12, heading="7.1 Config", text="Child", score=0.7),
+    ]
+    _xml, blocks, _citations = fmt.format(chunks)
+    assert len(blocks) == 1
+    assert "Part1" in blocks[0].text
+    assert "Part2" in blocks[0].text
+    assert "Child" in blocks[0].text
+    assert blocks[0].section == "7 GL Transfer"
+
+
+def test_merge_hierarchical_empty() -> None:
+    fmt = DefaultContextFormatter()
+    _xml, blocks, _citations = fmt.format([])
+    assert blocks == []

@@ -39,12 +39,14 @@ def _make_dummy_document() -> Document:
                         id="doc_test:p1:b0",
                         type="heading",
                         block_index=0,
+                        page_number=1,
                         paragraphs=[Paragraph(text="Section 1", index=0)],
                     ),
                     Block(
                         id="doc_test:p1:b1",
                         type="text",
                         block_index=1,
+                        page_number=1,
                         paragraphs=[
                             Paragraph(text=" ".join(f"WA{i}" for i in range(400)), index=0)
                         ],
@@ -53,6 +55,7 @@ def _make_dummy_document() -> Document:
                         id="doc_test:p1:b2",
                         type="text",
                         block_index=2,
+                        page_number=1,
                         paragraphs=[
                             Paragraph(text=" ".join(f"WB{i}" for i in range(400)), index=0)
                         ],
@@ -68,6 +71,7 @@ def _make_dummy_document() -> Document:
                         id="doc_test:p2:b0",
                         type="text",
                         block_index=0,
+                        page_number=2,
                         paragraphs=[
                             Paragraph(text="Step 1: Do this", index=0),
                             Paragraph(text="Step 2: Do that", index=1),
@@ -78,6 +82,7 @@ def _make_dummy_document() -> Document:
                         id="doc_test:p2:b1",
                         type="table",
                         block_index=1,
+                        page_number=2,
                         paragraphs=[],
                         table=TableData(headers=["A", "B"], rows=[["1", "2"]]),
                     ),

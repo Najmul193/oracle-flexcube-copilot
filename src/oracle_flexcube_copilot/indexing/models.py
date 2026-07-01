@@ -40,3 +40,15 @@ class SearchResult(BaseModel):
     retrieval_method: str = Field(
         description="The retrieval engine used (e.g. vector, bm25, exact)"
     )
+    document_id: str = Field(
+        default="",
+        description="Stable document identifier (SHA-256)",
+    )
+    module: str = Field(
+        default="",
+        description="Oracle module classification (e.g. General Ledger)",
+    )
+    section_id: str = Field(
+        default="",
+        description="Stable section identifier",
+    )

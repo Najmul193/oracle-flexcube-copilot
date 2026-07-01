@@ -42,9 +42,13 @@ def render_date() -> str:
     return date.today().isoformat()
 
 
-CONTEXT_BLOCK_XML = """<context_block index=\"{index}\">
+CONTEXT_BLOCK_XML = """<context_block index=\"{index}\" id=\"{chunk_id}\">
+<chunk_id>{chunk_id}</chunk_id>
 <document>{document}</document>
+<document_id>{document_id}</document_id>
 <section>{section}</section>
+<section_id>{section_id}</section_id>
+<module>{module}</module>
 <page>{page}</page>
 <page_end>{page_end}</page_end>
 <entities>{entities}</entities>
@@ -57,12 +61,17 @@ CONTEXT_BLOCK_XML = """<context_block index=\"{index}\">
 def render_context_block(block: ContextBlock) -> str:
     """Render a single ContextBlock as an XML string."""
     section = block.section or ""
+    section_id = block.section_id or ""
     entities_str = ", ".join(block.entities) if block.entities else ""
     page_end = str(block.page_end) if block.page_end is not None else ""
     return CONTEXT_BLOCK_XML.format(
         index=block.index,
+        chunk_id=_xml_escape(block.chunk_id),
         document=_xml_escape(block.document),
+        document_id=_xml_escape(block.document_id),
         section=_xml_escape(section),
+        section_id=_xml_escape(section_id),
+        module=_xml_escape(block.module),
         page=block.page,
         page_end=page_end,
         entities=_xml_escape(entities_str),

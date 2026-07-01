@@ -12,9 +12,6 @@ from oracle_flexcube_copilot.config import settings
 from oracle_flexcube_copilot.enrichment.models import EnrichedDocument
 from oracle_flexcube_copilot.ingestion.models import Block
 
-# Pattern to extract page number from block IDs like "sha256:p42:b0"
-_PAGE_FROM_BLOCK_ID = re.compile(r":p(\d+):")
-
 logger = logging.getLogger("oracle_flexcube_copilot.chunking.strategy")
 
 # Procedure step detection pattern
@@ -56,11 +53,9 @@ class SemanticSectionChunker(Chunker):
 
         # Create block lookup map
         block_map: dict[str, Block] = {}
-        page_map: dict[str, int] = {}
         for page in document.pages:
             for block in page.blocks:
                 block_map[block.id] = block
-                page_map[block.id] = page.page_number
 
         # Map blocks to heading paths and section info
         enriched_block_map = {eb.id: eb for eb in document.enriched_blocks}
@@ -103,7 +98,6 @@ class SemanticSectionChunker(Chunker):
                             blocks=current_blocks,
                             section=section,
                             enriched_block_map=enriched_block_map,
-                            page_map=page_map,
                         )
                     )
 
@@ -134,7 +128,6 @@ class SemanticSectionChunker(Chunker):
                         blocks=current_blocks,
                         section=section,
                         enriched_block_map=enriched_block_map,
-                        page_map=page_map,
                     )
                 )
 
@@ -207,34 +200,21 @@ class SemanticSectionChunker(Chunker):
         blocks: list[Block],
         section: Any,
         enriched_block_map: dict[str, Any],
-        page_map: dict[str, int],
     ) -> Chunk:
         """Create a Chunk object populated with all metadata."""
-        # Determine page range
-        pages = [page_map[b.id] for b in blocks if b.id in page_map]
+        # Determine page range from block-level page numbers
+        pages = sorted({b.page_number for b in blocks if b.page_number > 0})
         if pages:
-            page_start = min(pages)
-            page_end = max(pages)
+            page_start = pages[0]
+            page_end = pages[-1]
         else:
-            # Fallback: extract page from the first block's ID pattern
             page_start = 0
-            if blocks:
-                match = _PAGE_FROM_BLOCK_ID.search(blocks[0].id)
-                if match:
-                    page_start = int(match.group(1))
-                    logger.warning(
-                        "Page map missing for chunk %s; extracted page %d from block ID %s",
-                        chunk_id,
-                        page_start,
-                        blocks[0].id,
-                    )
-                else:
-                    logger.warning(
-                        "Could not determine page for chunk %s (block IDs: %s)",
-                        chunk_id,
-                        [b.id for b in blocks],
-                    )
-            page_end = page_start
+            page_end = 0
+            logger.error(
+                "Chunk %s has no valid page numbers (block IDs: %s)",
+                chunk_id,
+                [b.id for b in blocks],
+            )
 
         # Determine heading path (use the last block's path to represent current context)
         heading_path = []
@@ -268,6 +248,7 @@ class SemanticSectionChunker(Chunker):
             text=text.strip(),
             heading_path=heading_path,
             section_title=section.title,
+            section_id=section.id,
             page_start=page_start,
             page_end=page_end,
             oracle_entities=entities,

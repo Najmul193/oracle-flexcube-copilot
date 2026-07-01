@@ -107,7 +107,7 @@ class DocumentIngestionService:
             blocks = []
             for b in p.blocks:
                 block_id = make_block_id(sha256, p.page_number, b.block_index)
-                blocks.append(b.model_copy(update={"id": block_id}))
+                blocks.append(b.model_copy(update={"id": block_id, "page_number": p.page_number}))
             page_id = make_page_id(sha256, p.page_number)
             pages.append(p.model_copy(update={"id": page_id, "blocks": blocks}))
 

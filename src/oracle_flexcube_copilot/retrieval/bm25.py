@@ -70,6 +70,13 @@ class BM25Indexer:
                     "page": chunk.page_start,
                     "heading": heading,
                     "oracle_entities": entity_names,
+                    "document_id": chunk.document_id,
+                    "module": (
+                        chunk.metadata.module_classification
+                        if chunk.metadata and chunk.metadata.module_classification
+                        else ""
+                    ),
+                    "section_id": chunk.section_id,
                 }
             )
 
@@ -131,9 +138,12 @@ class BM25Retriever:
         for idx, score in top_indices:
             meta = self.metadata_store[idx]
             page = int(meta["page"])
-            if page < 1:
-                logger.warning("Chunk %s has invalid page=%d in BM25 index; using 1", meta["chunk_id"], page)
-                page = 1
+            if page == 0:
+                logger.warning(
+                    "Chunk %s has page=0 in BM25 index — stale data from before "
+                    "Block.page_number fix. Re-index to correct.",
+                    meta["chunk_id"],
+                )
             results.append(
                 SearchResult(
                     chunk_id=meta["chunk_id"],
@@ -144,6 +154,9 @@ class BM25Retriever:
                     oracle_entities=meta["oracle_entities"],
                     text=meta["text"],
                     retrieval_method="bm25",
+                    document_id=meta.get("document_id", ""),
+                    module=meta.get("module", ""),
+                    section_id=meta.get("section_id", ""),
                 )
             )
 

@@ -79,6 +79,16 @@ class RRFFuser:
         fused_results.sort(key=lambda x: x.score, reverse=True)
 
         top_results = fused_results[:top_k]
+
+        # Normalize fused scores to [0, 1] so citations are comparable
+        if top_results:
+            max_score = max(r.score for r in top_results)
+            min_score = min(r.score for r in top_results)
+            score_range = max_score - min_score
+            if score_range > 0:
+                for r in top_results:
+                    r.score = (r.score - min_score) / score_range
+
         logger.info("Fused %d unique results down to top %d.", len(fused_results), len(top_results))
 
         return top_results

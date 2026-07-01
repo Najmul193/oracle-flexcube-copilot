@@ -41,6 +41,7 @@ def test_render_context_block() -> None:
     block = ContextBlock(
         chunk_id="c1",
         document="GL.pdf",
+        document_id="abc123",
         section="GL Transfer",
         page=42,
         score=0.9,
@@ -49,8 +50,11 @@ def test_render_context_block() -> None:
         index=1,
     )
     xml = render_context_block(block)
-    assert '<context_block index="1">' in xml
+    assert '<context_block index="1"' in xml
+    assert 'id="c1"' in xml
+    assert "<chunk_id>c1</chunk_id>" in xml
     assert "<document>GL.pdf</document>" in xml
+    assert "<document_id>abc123</document_id>" in xml
     assert "<section>GL Transfer</section>" in xml
     assert "<page>42</page>" in xml
     assert "<entities>STTM_GL</entities>" in xml
@@ -69,6 +73,9 @@ def test_render_context_block_no_section() -> None:
     )
     xml = render_context_block(block)
     assert "<section></section>" in xml
+    assert "<section_id></section_id>" in xml
+    assert "<document_id></document_id>" in xml
+    assert "<module></module>" in xml
     assert "<entities></entities>" in xml
 
 

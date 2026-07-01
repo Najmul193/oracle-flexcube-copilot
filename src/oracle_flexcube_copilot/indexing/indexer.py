@@ -62,6 +62,7 @@ class ChromaIndexer:
             "document_name": c.metadata.document_name if c.metadata else "",
             "module": module_class,
             "section": c.section_title or "",
+            "section_id": c.section_id or "",
             "heading_path": heading_path_str,
             "page_start": c.page_start,
             "page_end": c.page_end,
@@ -248,9 +249,12 @@ class ChromaIndexer:
                 entity_names = []
 
             page = int(meta.get("page_start", 0))
-            if page < 1:
-                logger.warning("Chunk %s has invalid page_start=%d; using 1", cid, page)
-                page = 1
+            if page == 0:
+                logger.warning(
+                    "Chunk %s has page_start=0 in vector index — stale data from before "
+                    "Block.page_number fix. Re-index to correct.",
+                    cid,
+                )
             heading = meta.get("section", "")
             if not heading:
                 try:
@@ -270,6 +274,9 @@ class ChromaIndexer:
                     oracle_entities=entity_names,
                     text=str(doc_text),
                     retrieval_method="vector",
+                    document_id=str(meta.get("document_id", "")),
+                    module=str(meta.get("module", "")),
+                    section_id=str(meta.get("section_id", "")),
                 )
             )
 

@@ -11,12 +11,20 @@ class ContextBlock(BaseModel):
 
     chunk_id: str = Field(description="Unique chunk identifier")
     document: str = Field(description="Source document filename")
+    document_id: str = Field(
+        default="",
+        description="Stable document identifier (SHA-256)",
+    )
     section: str | None = Field(default=None, description="Section heading")
     section_id: str | None = Field(
         default=None,
         description="Stable section identifier for merge disambiguation",
     )
     page: int = Field(description="Start page number")
+    module: str = Field(
+        default="",
+        description="Oracle module classification (e.g. General Ledger)",
+    )
     page_end: int | None = Field(
         default=None,
         description="End page number (may differ from page if multiple pages)",
